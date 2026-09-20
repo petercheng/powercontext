@@ -1698,6 +1698,23 @@ def test_service_upgrade_preserves_registered_endpoint_and_data(tmp_path: Path) 
     assert adapter.definition.data_dir == previous.data_dir
 
 
+def test_service_install_uses_persistent_user_configuration(tmp_path: Path) -> None:
+    from powercontext.paths import default_server_env_file
+
+    environment = default_server_env_file()
+    environment.parent.mkdir(parents=True)
+    environment.write_text("POWERCONTEXT_SERVER_HTTP_PORT=18321\n", encoding="utf-8")
+    environment.chmod(0o600)
+    _secure_windows_file(environment)
+    adapter = FakeAdapter(tmp_path)
+
+    status = ServiceController(adapter, probe=_manager_probe(adapter), sleep=lambda _: None).install()
+
+    assert status.ok
+    assert status.endpoint == "http://127.0.0.1:18321"
+    assert status.environment_file == str(environment)
+
+
 def test_service_launcher_pins_the_recorded_data_directory(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

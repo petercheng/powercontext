@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 
 // Each host is an independently distributed package; keep the shared client config
 // contract and policy aligned with powercontext.client.transport_policy and powercontext.transport.
@@ -43,9 +43,17 @@ function environmentBoolean(env: NodeJS.ProcessEnv, name: string): boolean | und
 function readSavedClient(host: string, env: NodeJS.ProcessEnv): SavedClient {
   const home = optionalText(env.HOME) ?? homedir()
   const configuredPath = optionalText(env.POWERCONTEXT_CLIENT_CONFIG_FILE)
+  const xdgConfig = optionalText(env.XDG_CONFIG_HOME)
+  const configRoot = process.platform === 'win32'
+    ? optionalText(env.LOCALAPPDATA) ?? join(home, 'AppData', 'Local')
+    : process.platform === 'darwin'
+      ? join(home, 'Library', 'Application Support')
+      : xdgConfig && isAbsolute(xdgConfig) ? xdgConfig : join(home, '.config')
+  const preferred = join(configRoot, 'powercontext', 'clients.json')
+  const legacy = join(home, '.config', 'powercontext', 'clients.json')
   const path = configuredPath?.startsWith('~/')
     ? join(home, configuredPath.slice(2))
-    : configuredPath ?? join(home, '.config', 'powercontext', 'clients.json')
+    : configuredPath ?? (!existsSync(preferred) && existsSync(legacy) ? legacy : preferred)
   let contents: string
   try {
     contents = readFileSync(path, 'utf8')

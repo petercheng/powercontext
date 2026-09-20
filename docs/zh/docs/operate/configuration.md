@@ -7,9 +7,20 @@ description: PowerContext 路径、Server、Client 和推理环境变量。
 
 Windows 支持为 `experimental`。
 
-PowerContext 进程启动时从环境变量读取配置。当前工作目录存在 `.env` 时，`server run` 会自动加载该文件。使用
-`--env-file <path>` 可改为加载指定文件且不再合并 `.env`；使用 `--no-env-file` 可禁用文件加载。`server run` 的配置
-优先级为：CLI 参数、进程环境变量、所选环境文件、默认值。Agent 宿主可按自身规则加载环境文件。
+PowerContext 使用持久配置文件、环境变量和显式参数。`config init` 默认创建用户配置目录中的 `server.env`；
+已有用户配置或当前目录旧 `.env` 时沿用该文件，也可用 `--output` 指定位置。
+
+Linux 配置目录是 `$XDG_CONFIG_HOME/powercontext`，未设置时为 `~/.config/powercontext`；macOS 使用
+`~/Library/Application Support/powercontext`，Windows 使用 `%LOCALAPPDATA%/powercontext`。
+`server run` 优先读取用户 `server.env`，不存在时兼容当前目录 `.env`。`--env-file <path>` 只加载指定文件，
+`--no-env-file` 禁用全部自动文件加载。前台配置优先级为 CLI 参数、进程环境变量、所选文件、内置默认值。
+
+客户端将连接配置保存在同目录的 `clients.json`，可用 `POWERCONTEXT_CLIENT_CONFIG_FILE` 指定位置；新位置不存在时
+继续读取旧 `~/.config/powercontext/clients.json`。客户端 URL 独立于服务端监听地址，远程客户端只读取本机配置。
+`powercontext config show --json` 显示配置来源、有效端口和数据库位置，并脱敏凭据；配置值不代表正在运行的进程状态。
+
+新安装默认使用 `17429`。已有配置和个人服务注册的端口、数据目录在升级时保留。端口被占用时启动失败，修改配置后
+重启服务；不会自动跳号。新安装的 `service install` 自动选择用户 `server.env`，已有注册继续使用记录中的配置文件。
 
 生成、脱敏查看、校验和启动配置文件的完整流程见[配置 Server 环境](../get-started/configure-server-environment.md)。所有环境
 文件都应视为包含机密的部署产物。

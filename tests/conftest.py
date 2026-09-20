@@ -37,6 +37,7 @@ def isolated_client_connection_settings(tmp_path, monkeypatch, request):
     """Never consume or overwrite the developer's persistent setup consent."""
 
     if not request.config.getoption("run_real_e2e"):
+        monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
         monkeypatch.setenv("POWERCONTEXT_CLIENT_CONFIG_FILE", str(tmp_path / "client-settings.json"))
         monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
 

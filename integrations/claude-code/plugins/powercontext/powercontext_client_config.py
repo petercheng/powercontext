@@ -23,6 +23,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
@@ -55,10 +56,33 @@ def normalize_server_url(value: str, *, allow_insecure_http: bool = False) -> st
     return urlunsplit((parsed.scheme, netloc, path, "", "")).rstrip("/")
 
 
+def powercontext_config_dir() -> Path:
+    """Locate user configuration, without depending on optional Server packages."""
+
+    if sys.platform == "win32":
+        root = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+    elif sys.platform == "darwin":
+        root = Path.home() / "Library" / "Application Support"
+    else:
+        configured = os.environ.get("XDG_CONFIG_HOME", "")
+        root = Path(configured) if configured and Path(configured).is_absolute() else Path.home() / ".config"
+    return root / "powercontext"
+
+
+def client_config_path() -> Path:
+    """Prefer the platform path, retaining an existing legacy client file."""
+
+    configured = os.environ.get("POWERCONTEXT_CLIENT_CONFIG_FILE")
+    if configured:
+        return Path(configured).expanduser()
+    preferred = powercontext_config_dir() / "clients.json"
+    legacy = Path.home() / ".config" / "powercontext" / "clients.json"
+    return legacy if not preferred.exists() and legacy.is_file() else preferred
+
+
 def load_client_settings(host: str) -> dict[str, Any]:
     """Read only the nonsecret settings owned by this host."""
-    configured = os.environ.get("POWERCONTEXT_CLIENT_CONFIG_FILE")
-    path = Path(configured).expanduser() if configured else Path.home() / ".config" / "powercontext" / "clients.json"
+    path = client_config_path()
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:

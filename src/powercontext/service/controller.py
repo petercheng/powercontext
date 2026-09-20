@@ -29,7 +29,7 @@ from typing import cast
 from urllib.parse import urlsplit
 
 from powercontext.cli.env_file import environment_context
-from powercontext.paths import POWERCONTEXT_HOME_ENV, powercontext_data_dir
+from powercontext.paths import POWERCONTEXT_HOME_ENV, default_server_env_file, powercontext_data_dir
 from powercontext.server.configuration import ServerConfigurationError, server_settings_context
 from powercontext.service.adapters import NativeServiceAdapter, native_service_adapter
 from powercontext.service.adapters.base import definition_state, service_python_executable
@@ -173,6 +173,8 @@ class ServiceController:
             server_liveness=LivenessState.UNKNOWN,
             endpoint=definition.endpoint,
             log_location=self._adapter.log_location(definition),
+            environment_file=definition.env_file.path if definition.env_file is not None else None,
+            data_dir=definition.data_dir,
             recovery_action=None,
             detail=registration.detail or support_detail,
             manager_ownership=ManagerOwnershipState.UNKNOWN,
@@ -241,6 +243,8 @@ class ServiceController:
         previous = self._adapter.inspect().definition
         if env_file is None and previous is not None and previous.env_file is not None:
             env_file = Path(previous.env_file.path)
+        if env_file is None and previous is None and default_server_env_file().is_file():
+            env_file = default_server_env_file()
         try:
             loaded_env = load_protected_environment_file(env_file) if env_file is not None else None
         except ProtectedEnvironmentFileError as error:

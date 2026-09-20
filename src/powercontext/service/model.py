@@ -245,6 +245,8 @@ class ServiceStatus:
     recovery_action: str | None = None
     detail: str | None = None
     manager_ownership: ManagerOwnershipState = ManagerOwnershipState.UNKNOWN
+    environment_file: str | None = None
+    data_dir: str | None = None
 
     @property
     def ok(self) -> bool:
@@ -269,6 +271,8 @@ class ServiceStatus:
             "log_location": self.log_location,
             "recovery_action": self.recovery_action,
             "detail": self.detail,
+            "environment_file": self.environment_file,
+            "data_dir": self.data_dir,
         }
 
 

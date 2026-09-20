@@ -7,11 +7,25 @@ description: PowerContext paths, Server, Client, and inference environment varia
 
 Windows support is `experimental`.
 
-PowerContext reads configuration from environment variables when each process starts. `server run` loads `.env` from the
-current working directory when that file exists. Pass `--env-file <path>` to select a different file without also
-merging `.env`, or pass `--no-env-file` to disable file loading. For `server run`, CLI options override process
-environment variables, process variables override values from the selected file, and defaults apply last. Agent hosts
-can load their own environment files according to their host-specific rules.
+PowerContext uses persistent configuration files, environment variables, and explicit options. `config init` creates
+`server.env` in the user configuration directory, reuses an existing user file or legacy working-directory `.env`,
+and accepts `--output` for an explicit destination.
+
+On Linux the configuration directory is `$XDG_CONFIG_HOME/powercontext`, falling back to `~/.config/powercontext`.
+On macOS it is `~/Library/Application Support/powercontext`; on Windows it is `%LOCALAPPDATA%/powercontext`.
+`server run` prefers the user `server.env`, falling back to a working-directory `.env` when absent. `--env-file <path>`
+selects only that file; `--no-env-file` disables all file discovery. Foreground precedence is CLI options, process
+environment, the selected file, then built-in defaults.
+
+Clients store connections in `clients.json` in the same configuration directory, overridable with
+`POWERCONTEXT_CLIENT_CONFIG_FILE`. When the new location does not exist, an existing
+`~/.config/powercontext/clients.json` remains in use. Client URLs are independent of listener addresses; remote clients
+read configuration on their own machine. `powercontext config show --json` reports sources, the effective port, and
+database location with credentials redacted. These are configured values, not a claim about the running process.
+
+New installations default to port `17429`. Upgrades preserve configured ports and registered service data directories.
+A port conflict fails startup; change the configuration and restart rather than selecting a new port automatically.
+A new `service install` selects the user `server.env`; existing registrations retain their recorded configuration file.
 
 For the configuration-file workflow, including generation, redacted inspection, validation, and launch, see
 [Configure a Server environment](../get-started/configure-server-environment.md). Treat every environment file as a

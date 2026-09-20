@@ -73,10 +73,12 @@ def install(
         raise typer.Exit(code=2)
     expanded_env_file = env_file.expanduser() if env_file is not None else None
     try:
+        status = _controller().install(env_file=expanded_env_file, start_on_login=start_on_login)
+        if status.environment_file is not None:
+            expanded_env_file = Path(status.environment_file)
         with server_settings_context(env_file=expanded_env_file) as settings:
             generation_model = settings.inference.generation_model
             embedding_model = settings.inference.embedding_model
-        status = _controller().install(env_file=expanded_env_file, start_on_login=start_on_login)
     except (OSError, ServerConfigurationError, ServiceError) as error:
         typer.echo(f"PowerContext personal service installation failed: {error}", err=True)
         if isinstance(error, ServiceError) and error.status is not None:
@@ -154,6 +156,10 @@ def _write_status(status: ServiceStatus, *, json_output: bool) -> None:
         liveness = f"{liveness} ({status.endpoint})"
     typer.echo(f"server liveness: {liveness}")
     typer.echo(f"logs: {status.log_location or 'unavailable'}")
+    if status.environment_file is not None:
+        typer.echo(f"configuration file: {status.environment_file}")
+    if status.data_dir is not None:
+        typer.echo(f"data directory: {status.data_dir}")
     if status.detail:
         typer.echo(f"detail: {status.detail}")
     if status.recovery_action:
