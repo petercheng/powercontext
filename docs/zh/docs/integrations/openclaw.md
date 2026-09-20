@@ -17,7 +17,7 @@ uv tool install --force "powercontext[cli,server] @ git+https://github.com/ocean
 powercontext setup openclaw
 ```
 
-未显式指定地址时，setup 会读取环境变量和已保存的客户端配置；均未配置时使用 `http://127.0.0.1:8000`。
+未显式指定地址时，setup 会读取环境变量和已保存的客户端配置；均未配置时使用 `http://127.0.0.1:17429`。
 
 也可以使用本地 checkout：
 

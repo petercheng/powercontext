@@ -105,8 +105,8 @@ powercontext server run
 
 保持这个进程运行。默认情况下，Server 会：
 
-- 监听 `http://127.0.0.1:8000`；
-- 在 `http://127.0.0.1:8000/mcp` 提供 Streamable HTTP MCP；
+- 监听 `http://127.0.0.1:17429`；
+- 在 `http://127.0.0.1:17429/mcp` 提供 Streamable HTTP MCP；
 - 在操作系统的 PowerContext 用户数据目录中创建持久化 SQLite 数据库。
 
 回到**终端 B**，运行：
@@ -148,7 +148,7 @@ PowerContext 的数据按 Scope 隔离。Codex 插件会让 Server 依次解析�
 ```bash
 quickstart_scope_file="$(mktemp "${TMPDIR:-/tmp}/powercontext-quickstart-scope.XXXXXX.json")"
 trap 'rm -f "$quickstart_scope_file"' EXIT
-curl --fail --request POST http://127.0.0.1:8000/v1/scopes \
+curl --fail --request POST http://127.0.0.1:17429/v1/scopes \
   --header 'Content-Type: application/json' \
   --data '{"title":"PowerContext quickstart","summary":"Isolated Scope for the local tutorial.","idempotency_key":"powercontext-quickstart"}' \
   --output "$quickstart_scope_file"

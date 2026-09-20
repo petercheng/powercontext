@@ -41,7 +41,7 @@ uv run powercontext config validate --env-file .env
 uv run powercontext server run --env-file .env
 ```
 
-Keep the server running in its terminal. The plugin connects to `http://127.0.0.1:8000/mcp` by default.
+Keep the server running in its terminal. The plugin connects to `http://127.0.0.1:17429/mcp` by default.
 
 Enable the PowerContext plugin in MiniMax Code. To check that MiniMax Code has discovered it, run:
 
@@ -71,7 +71,7 @@ The bundled connection uses a local server without authentication. If your deplo
 }
 ```
 
-Replace the URL and token with your deployment values. Use `http://127.0.0.1:8000/mcp` for a protected server on the same machine. MiniMax Code 0.2.7 gives the enabled user-configured `powercontext` server precedence over the plugin's connection; the Skill remains available. Restart MiniMax Code after changing the configuration.
+Replace the URL and token with your deployment values. Use `http://127.0.0.1:17429/mcp` for a protected server on the same machine. MiniMax Code 0.2.7 gives the enabled user-configured `powercontext` server precedence over the plugin's connection; the Skill remains available. Restart MiniMax Code after changing the configuration.
 
 Keep this file private and out of version control; on Linux and macOS, restrict its permissions to `600`. Do not put the token in the plugin's `powercontext.mcp.json` or `plugin.json`. Enter the token value directly in the private configuration; a `${TOKEN}` placeholder will not load it from the environment.
 
@@ -92,7 +92,7 @@ The plugin saves context when requested; it does not automatically capture every
 
 ## Troubleshooting
 
-If PowerContext is unavailable, check that the server is running and that MiniMax Code can reach `http://127.0.0.1:8000/mcp`. If the plugin is missing from the listing, check that it is installed and enabled in the MiniMax data directory you are using.
+If PowerContext is unavailable, check that the server is running and that MiniMax Code can reach `http://127.0.0.1:17429/mcp`. If the plugin is missing from the listing, check that it is installed and enabled in the MiniMax data directory you are using.
 
 For a custom endpoint, check the URL in your private MCP configuration. A `401` response means the server did not accept the credentials; check the Bearer token and restart MiniMax Code after updating it. A `403` response means the authenticated identity lacks permission for the requested operation.
 

@@ -100,7 +100,7 @@ LangGraph adapter's scope or environment prefix:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `POWERCONTEXT_LANGCHAIN_BASE_URL` | `http://127.0.0.1:8000` | PowerContext Server URL |
+| `POWERCONTEXT_LANGCHAIN_BASE_URL` | `http://127.0.0.1:17429` | PowerContext Server URL |
 | `POWERCONTEXT_LANGCHAIN_ALLOW_INSECURE_HTTP` | `false` | Explicitly permit non-loopback plaintext HTTP |
 | `POWERCONTEXT_LANGCHAIN_TOKEN` | unset | Bare bearer token passed to the Client |
 | `POWERCONTEXT_LANGCHAIN_SCOPE_ID` | unset | Existing Server Scope to use instead of the Server default |

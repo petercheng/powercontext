@@ -38,7 +38,7 @@ the destination only after both the HTTP request and response validation succeed
 set -euo pipefail
 tmp_context="$(mktemp "${TMPDIR:-/tmp}/powercontext-context.XXXXXX")"
 trap 'rm -f "$tmp_context"' EXIT
-curl --fail-with-body -sS http://127.0.0.1:8000/v1/context/prepare \
+curl --fail-with-body -sS http://127.0.0.1:17429/v1/context/prepare \
   -H 'Content-Type: application/json' --data-binary @prepare.json \
   | jq -er 'if .status == "empty" then "" elif .status == "ready" and (.content | type) == "string" then .content else error("unexpected prepare response") end' \
   > "$tmp_context"
@@ -63,7 +63,7 @@ from powercontext.http import PrepareContextRequest
 
 async def export_context() -> None:
     request = PrepareContextRequest.model_validate(json.loads(Path("prepare.json").read_text(encoding="utf-8")))
-    async with PowerContextClient("http://127.0.0.1:8000") as client:
+    async with PowerContextClient("http://127.0.0.1:17429") as client:
         prepared = await client.prepare_context(request)
     Path("context.md").write_text(prepared.content or "", encoding="utf-8")
 

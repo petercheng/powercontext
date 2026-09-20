@@ -124,7 +124,7 @@ powercontext doctor pi
 
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
-| `POWERCONTEXT_PI_BASE_URL` | `http://127.0.0.1:8000` | Server base URL |
+| `POWERCONTEXT_PI_BASE_URL` | `http://127.0.0.1:17429` | Server base URL |
 | `POWERCONTEXT_PI_ALLOW_INSECURE_HTTP` | `false` | 显式允许非环回明文 HTTP |
 | `POWERCONTEXT_PI_SCOPE_ID` | 未设置 | 在 workspace binding 和 Server 默认值之前显式选择已有 Scope |
 | `POWERCONTEXT_PI_AUTHORIZATION` | 未设置 | package HTTP 请求使用的完整 `Bearer <token>` header |

@@ -15,7 +15,7 @@ provider configuration、可执行 Source Definition 和文件读取逻辑。Ser
 
 ## 前置条件
 
-该集成要求 Python 3.12 或更高版本。先启动默认监听 `http://127.0.0.1:8000` 的 PowerContext Server，再从 checkout 安装 worker：
+该集成要求 Python 3.12 或更高版本。先启动默认监听 `http://127.0.0.1:17429` 的 PowerContext Server，再从 checkout 安装 worker：
 
 ```bash
 uv tool install --python 3.12 --with-editable ".[client]" ./integrations/opendal
@@ -26,7 +26,7 @@ checkpoint。Server 启用 authentication 时，通过 `POWERCONTEXT_TOKEN` 环�
 `POWERCONTEXT_SCOPE_ID` 设置为 `create_scope` 返回的已有 ID，并设置 worker 使用的 Server 地址：
 
 ```bash
-export POWERCONTEXT_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_BASE_URL=http://127.0.0.1:17429
 export POWERCONTEXT_SCOPE_ID='已有的-scope-id'
 ```
 
@@ -83,7 +83,7 @@ binding = ConnectorBinding(
 registry = SourceDefinitionRegistry((TEXT_FILE_SNAPSHOT_SOURCE_DEFINITION,))
 
 async def main() -> None:
-    base_url = os.environ.get("POWERCONTEXT_BASE_URL", "http://127.0.0.1:8000")
+    base_url = os.environ.get("POWERCONTEXT_BASE_URL", "http://127.0.0.1:17429")
     token = os.environ.get("POWERCONTEXT_TOKEN")
     async with PowerContextClient(base_url, token=token) as client:
         result = await RemoteConnectorWorker(client=client, registry=registry).run(connector, binding)

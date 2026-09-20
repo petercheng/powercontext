@@ -49,6 +49,7 @@ from powercontext.cli.config_wizard_seekdb import (
 from powercontext.cli.config_wizard_ui import WizardUI, choose_language
 from powercontext.cli.env_file import EnvironmentFileError, parse_environment
 from powercontext.client.settings import normalize_server_url
+from powercontext.defaults import DEFAULT_SERVER_PORT
 from powercontext.paths import default_database_path, default_seekdb_path, sqlite_url
 
 SERVER = "POWERCONTEXT_SERVER_"
@@ -436,16 +437,16 @@ def _server_url(ui: WizardUI, default: str) -> str:
 
 def _stored_network_port(state: Wizard) -> tuple[int, bool]:
     try:
-        port = int(state.values.get(f"{SERVER}HTTP_PORT", "8000"))
+        port = int(state.values.get(f"{SERVER}HTTP_PORT", str(DEFAULT_SERVER_PORT)))
     except ValueError:
         port = 0
     if 1 <= port <= 65535:
         return port, False
     state.ui.say(
-        "The existing Server port is invalid. Using 8000 as the editable default.",
-        "已有 Server 端口无效，将以 8000 作为可修改的默认值。",
+        "The existing Server port is invalid. Using 17429 as the editable default.",
+        "已有 Server 端口无效，将以 17429 作为可修改的默认值。",
     )
-    return 8000, True
+    return DEFAULT_SERVER_PORT, True
 
 
 def _custom_access(state: Wizard, port: int) -> tuple[str, int, str]:
@@ -523,7 +524,7 @@ def _network(state: Wizard) -> None:
     port, invalid_port = _stored_network_port(state)
     state.forwarded_address = ""
     state.ssh_tunnel_command = ""
-    if state.scenario == "local" and (invalid_port or port != 8000):
+    if state.scenario == "local" and (invalid_port or port != DEFAULT_SERVER_PORT):
         port = ui.integer("Server port", "Server 端口", default=port, maximum=65535)
     host = "127.0.0.1"
     address = f"http://127.0.0.1:{port}"
@@ -779,7 +780,7 @@ def _agents(state: Wizard) -> None:
     ui = state.ui
     ui.section("7. Agent connection files", "7. Agent 连接文件")
     if not state.client:
-        port = state.values.get(f"{SERVER}HTTP_PORT", "8000")
+        port = state.values.get(f"{SERVER}HTTP_PORT", str(DEFAULT_SERVER_PORT))
         state.client[f"{CLIENT}SERVER_URL"] = state.values.get(f"{CLIENT}SERVER_URL", f"http://127.0.0.1:{port}")
         token = state.values.get(f"{SERVER}AUTH_TOKEN", state.values.get(f"{CLIENT}API_TOKEN", ""))
         if token:
@@ -840,7 +841,7 @@ def _configure_agent(state: Wizard, agent: AgentSpec) -> None:
         if location == "other":
             address = state.forwarded_address
         else:
-            address = f"http://127.0.0.1:{state.values.get(f'{SERVER}HTTP_PORT', '8000')}"
+            address = f"http://127.0.0.1:{state.values.get(f'{SERVER}HTTP_PORT', str(DEFAULT_SERVER_PORT))}"
     if state.scenario != "local":
         address = _server_url(ui, address)
     if not state.agent_addresses or agent.identifier == "codex":
@@ -1183,7 +1184,7 @@ def _connection_base_url(state: Wizard, values: dict[str, str]) -> str:
     host = values.get(f"{SERVER}HTTP_HOST", "127.0.0.1")
     if host in {"0.0.0.0", "::", "[::]"}:  # noqa: S104 - normalize wildcard listeners for a local browser URL
         host = "127.0.0.1"
-    port = values.get(f"{SERVER}HTTP_PORT", "8000")
+    port = values.get(f"{SERVER}HTTP_PORT", str(DEFAULT_SERVER_PORT))
     return f"http://{host}:{port}"
 
 

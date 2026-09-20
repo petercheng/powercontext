@@ -46,6 +46,7 @@ from powercontext.cli.transport import (
 )
 from powercontext.client.settings import normalize_server_url
 from powercontext.client.transport_policy import resolve_client_transport
+from powercontext.defaults import DEFAULT_SERVER_URL
 from powercontext.http import HealthResponse, ReadinessResponse, ReadinessStatus
 from powercontext.paths import powercontext_data_dir
 from powercontext.transport import canonical_loopback_endpoint, is_loopback_host
@@ -53,8 +54,8 @@ from powercontext.transport import canonical_loopback_endpoint, is_loopback_host
 HELP_OPTION_NAMES = ("-h", "--help")
 DEFAULT_MARKETPLACE_SOURCE = "oceanbase/powercontext"
 DEFAULT_MARKETPLACE_REF = "master"
-DEFAULT_CLAUDE_CODE_SERVER_URL = "http://127.0.0.1:8000"
-DEFAULT_OPENCLAW_SERVER_URL = "http://127.0.0.1:8000"
+DEFAULT_CLAUDE_CODE_SERVER_URL = DEFAULT_SERVER_URL
+DEFAULT_OPENCLAW_SERVER_URL = DEFAULT_SERVER_URL
 PLUGIN_NAME = "powercontext"
 CLAUDE_MARKETPLACE_NAME = "powercontext"
 _GITHUB_REPOSITORY = re.compile(r"^[^/\s]+/[^/\s]+$")

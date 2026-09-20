@@ -28,8 +28,9 @@ from powercontext.client.transport_policy import (
     parse_client_boolean,
     resolve_client_transport,
 )
+from powercontext.defaults import DEFAULT_SERVER_URL
 
-_DEFAULT_URL = "http://127.0.0.1:8000"
+_DEFAULT_URL = DEFAULT_SERVER_URL
 _MISSING = object()
 _UNKNOWN = "Cannot determine PowerContext transport from unsupported or unreadable native host configuration"
 

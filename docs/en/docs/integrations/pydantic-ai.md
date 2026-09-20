@@ -58,13 +58,13 @@ agent = Agent("openai:gpt-5.2", toolsets=[PowerContextToolset()])
 ## Set environment configuration
 
 ```bash
-export POWERCONTEXT_PYDANTIC_AI_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_PYDANTIC_AI_BASE_URL=http://127.0.0.1:17429
 export POWERCONTEXT_PYDANTIC_AI_TOKEN=opaque-server-token
 ```
 
 | Variable | Default | Validation and behavior |
 | --- | --- | --- |
-| `POWERCONTEXT_PYDANTIC_AI_BASE_URL` | `http://127.0.0.1:8000` | HTTP(S), without credentials, query, or fragment |
+| `POWERCONTEXT_PYDANTIC_AI_BASE_URL` | `http://127.0.0.1:17429` | HTTP(S), without credentials, query, or fragment |
 | `POWERCONTEXT_PYDANTIC_AI_ALLOW_INSECURE_HTTP` | `false` | Explicitly permit non-loopback plaintext HTTP |
 | `POWERCONTEXT_PYDANTIC_AI_TOKEN` | unset | Bare printable token stored as `SecretStr` |
 | `POWERCONTEXT_PYDANTIC_AI_SCOPE_ID` | unset | Existing explicit Server Scope, up to 256 characters; unset selects the Server default |

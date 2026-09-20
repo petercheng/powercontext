@@ -41,7 +41,7 @@ Server 配置使用 `POWERCONTEXT_SERVER_` 前缀。
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
 | `POWERCONTEXT_SERVER_HTTP_HOST` | `127.0.0.1` | 监听地址 |
-| `POWERCONTEXT_SERVER_HTTP_PORT` | `8000` | 监听端口 |
+| `POWERCONTEXT_SERVER_HTTP_PORT` | `17429` | 监听端口 |
 | `POWERCONTEXT_SERVER_WORKSPACE` | Server 启动目录 | 本机项目级 Agent Skill 目录的解析根目录 |
 | `POWERCONTEXT_SERVER_MCP_ENABLED` | `true` | 启用 Streamable HTTP MCP |
 | `POWERCONTEXT_SERVER_MCP_PATH` | `/mcp` | MCP 路径 |
@@ -392,7 +392,7 @@ full-text search 仍可用。配置和 capability 验证步骤见[配置向量�
 
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
-| `POWERCONTEXT_CLIENT_SERVER_URL` | `http://127.0.0.1:8000` | Server base URL |
+| `POWERCONTEXT_CLIENT_SERVER_URL` | `http://127.0.0.1:17429` | Server base URL |
 | `POWERCONTEXT_CLIENT_API_TOKEN` | 未设置 | 发送给启用鉴权的 Server 的 Bearer token |
 | `POWERCONTEXT_CLIENT_TIMEOUT` | `10` | HTTP 超时秒数 |
 

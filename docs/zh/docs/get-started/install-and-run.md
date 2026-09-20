@@ -63,7 +63,7 @@ powercontext server run
 
 未设置环境变量时，Server 会：
 
-- 监听 `127.0.0.1:8000`；
+- 监听 `127.0.0.1:17429`；
 - 在 `/mcp` 启用 Streamable HTTP MCP；
 - 创建默认 Scope；
 - 在操作系统的用户数据目录中创建持久化 SQLite 数据库；
@@ -86,7 +86,7 @@ powercontext config validate --env-file /path/to/powercontext.env
 powercontext server run --env-file /path/to/powercontext.env
 ```
 
-打开 `http://127.0.0.1:8000/dashboard/home`，输入同一个 token。更改端口后使用实际端口。
+打开 `http://127.0.0.1:17429/dashboard/home`，输入同一个 token。更改端口后使用实际端口。
 该 token 同时用于 Server API 和 MCP，已连接的 Agent 也需配置它。CLI 不会自动读取目录中的 `.env` 文件。
 
 首次登录选择 Server 默认 Scope，未保存内容时显示空状态。通过 Agent 或公开 API 保存一条 Memory，

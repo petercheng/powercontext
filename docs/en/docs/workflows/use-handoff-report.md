@@ -14,7 +14,7 @@ Start the Server and set its base URL:
 
 ```bash
 powercontext server run
-export POWERCONTEXT_URL=http://127.0.0.1:8000
+export POWERCONTEXT_URL=http://127.0.0.1:17429
 ```
 
 Handoff Report API routes are enabled by default. If bearer authentication is enabled, also set an authorization

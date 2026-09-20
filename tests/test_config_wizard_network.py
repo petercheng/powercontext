@@ -58,7 +58,7 @@ def test_invalid_existing_port_can_be_repaired_in_the_wizard(original_port: str)
 
     assert result.exit_code == 0, result.output
     assert "invalid" in result.output
-    assert "Server port [8000]" in result.output
+    assert "Server port [17429]" in result.output
     assert state.values[SERVER + "HTTP_PORT"] == "9000"
     assert state.client[CLIENT + "SERVER_URL"] == "http://127.0.0.1:9000"
 
@@ -71,7 +71,7 @@ def test_invalid_existing_port_retry_is_localized_and_can_accept_fallback() -> N
     assert result.exit_code == 0, result.output
     assert "无效" in result.output
     assert "invalid" not in result.output
-    assert state.values[SERVER + "HTTP_PORT"] == "8000"
+    assert state.values[SERVER + "HTTP_PORT"] == "17429"
 
 
 def test_existing_non_default_local_port_can_be_changed() -> None:
@@ -125,7 +125,7 @@ def test_default_local_port_keeps_the_short_flow() -> None:
 
     assert result.exit_code == 0, result.output
     assert "Server port" not in result.output
-    assert state.values[SERVER + "HTTP_PORT"] == "8000"
+    assert state.values[SERVER + "HTTP_PORT"] == "17429"
     assert state.forwarded_address == ""
 
 
@@ -148,10 +148,10 @@ def test_ssh_preserves_server_address_and_exposes_forwarded_client_address() -> 
 
     assert result.exit_code == 0, result.output
     assert state.values[SERVER + "HTTP_HOST"] == "127.0.0.1"
-    assert state.values[SERVER + "HTTP_PORT"] == "8000"
-    assert state.client[CLIENT + "SERVER_URL"] == "http://127.0.0.1:8000"
+    assert state.values[SERVER + "HTTP_PORT"] == "17429"
+    assert state.client[CLIENT + "SERVER_URL"] == "http://127.0.0.1:17429"
     assert state.forwarded_address == "http://127.0.0.1:18000"
-    assert "ssh -N -L 18000:127.0.0.1:8000 t1" in result.output
+    assert "ssh -N -L 18000:127.0.0.1:17429 t1" in result.output
     assert "run the generated command on the client" in result.output
 
 

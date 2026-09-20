@@ -266,7 +266,7 @@ def render(server_url: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server-url", default="http://127.0.0.1:8000")
+    parser.add_argument("--server-url", default="http://127.0.0.1:17429")
     arguments = parser.parse_args()
     print(render(arguments.server_url))
     return 0

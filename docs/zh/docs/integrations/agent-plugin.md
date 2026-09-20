@@ -37,7 +37,7 @@ uv run powercontext server run
 该 package 默认让兼容 Agent 连接：
 
 ```text
-http://127.0.0.1:8000/mcp
+http://127.0.0.1:17429/mcp
 ```
 
 连接远程 Server 时，在加载插件的宿主中配置 MCP 地址。此插件由宿主负责传输，没有独立的 PowerContext HTTP

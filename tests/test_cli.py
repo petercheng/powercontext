@@ -893,7 +893,7 @@ def test_server_command_can_disable_default_dotenv_discovery(
 
     assert result.exit_code == 0
     assert "Loaded environment file:" not in result.output
-    assert received == [(8000, None)]
+    assert received == [(17429, None)]
 
 
 def test_server_command_rejects_env_file_with_no_env_file(tmp_path: Path, _wide_error_panel: None) -> None:

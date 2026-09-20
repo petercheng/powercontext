@@ -1466,7 +1466,7 @@ def test_default_doctor_skips_readiness_when_liveness_is_unreachable(monkeypatch
     result = CliRunner().invoke(create_cli([doctor_app]), ["doctor"])
 
     assert result.exit_code == 1
-    assert "server liveness: failed - cannot reach http://127.0.0.1:8000" in result.output
+    assert "server liveness: failed - cannot reach http://127.0.0.1:17429" in result.output
     assert "server readiness: skipped - not checked because Server liveness failed" in result.output
     assert urlopen.call_count == 1
 
@@ -1476,7 +1476,7 @@ def test_default_doctor_preserves_not_ready_checks_in_human_and_json_output(monk
 
     def responses() -> list[object]:
         readiness = HTTPError(
-            "http://127.0.0.1:8000/health/ready",
+            "http://127.0.0.1:17429/health/ready",
             503,
             "Service Unavailable",
             hdrs=Message(),
@@ -1499,14 +1499,14 @@ def test_default_doctor_preserves_not_ready_checks_in_human_and_json_output(monk
     machine = CliRunner().invoke(create_cli([doctor_app]), ["doctor", "--json"])
 
     assert human.exit_code == 1
-    assert "server readiness: failed - http://127.0.0.1:8000 status=not_ready" in human.output
+    assert "server readiness: failed - http://127.0.0.1:17429 status=not_ready" in human.output
     assert "  database: unavailable" in human.output
     assert machine.exit_code == 1
     assert json.loads(machine.output)["status"] == "failed"
     assert json.loads(machine.output)["checks"]["server_readiness"] == {
         "ok": False,
         "status": "failed",
-        "detail": "http://127.0.0.1:8000 status=not_ready",
+        "detail": "http://127.0.0.1:17429 status=not_ready",
         "checks": {
             "runtime": "ready",
             "database": "unavailable",
@@ -1542,7 +1542,7 @@ def test_default_doctor_preserves_degraded_checks_in_human_and_json_output(monke
     machine = CliRunner().invoke(create_cli([doctor_app]), ["doctor", "--json"])
 
     assert human.exit_code == 1
-    assert "server readiness: degraded - http://127.0.0.1:8000 status=degraded" in human.output
+    assert "server readiness: degraded - http://127.0.0.1:17429 status=degraded" in human.output
     assert "  inference.embedding: misconfigured" in human.output
     assert machine.exit_code == 1
     assert json.loads(machine.output) == {
@@ -1567,12 +1567,12 @@ def test_default_doctor_preserves_degraded_checks_in_human_and_json_output(monke
             "server_liveness": {
                 "ok": True,
                 "status": "ok",
-                "detail": "http://127.0.0.1:8000 status=ok",
+                "detail": "http://127.0.0.1:17429 status=ok",
             },
             "server_readiness": {
                 "ok": False,
                 "status": "degraded",
-                "detail": "http://127.0.0.1:8000 status=degraded",
+                "detail": "http://127.0.0.1:17429 status=degraded",
                 "checks": {
                     "runtime": "ready",
                     "database": "ready",

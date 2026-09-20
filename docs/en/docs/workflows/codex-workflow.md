@@ -110,8 +110,8 @@ powercontext server run
 
 Keep this process running. By default, the Server:
 
-- listens at `http://127.0.0.1:8000`;
-- serves Streamable HTTP MCP at `http://127.0.0.1:8000/mcp`;
+- listens at `http://127.0.0.1:17429`;
+- serves Streamable HTTP MCP at `http://127.0.0.1:17429/mcp`;
 - creates a persistent SQLite database in the operating system's PowerContext user data directory.
 
 Return to **Terminal B** and run:

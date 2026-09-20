@@ -55,11 +55,11 @@ Server 是前台进程，保持这个终端运行。配置 generation 和定时�
 在另一个终端指定同一个 Server，然后启动 DSH：
 
 ```bash
-export POWERCONTEXT_DSH_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_DSH_BASE_URL=http://127.0.0.1:17429
 dsh web
 ```
 
-PowerShell 使用 `$env:POWERCONTEXT_DSH_BASE_URL = "http://127.0.0.1:8000"`，然后运行 `dsh web`。
+PowerShell 使用 `$env:POWERCONTEXT_DSH_BASE_URL = "http://127.0.0.1:17429"`，然后运行 `dsh web`。
 Server 使用其他监听地址时同步修改 URL。鉴权使用 `POWERCONTEXT_DSH_AUTHORIZATION`，
 不要把 Server 的模型凭据复制到插件配置。使用 workspace binding 或 Server 默认 Scope 时不设置
 `POWERCONTEXT_DSH_SCOPE_ID`；需要覆盖时，指定一个已经存在的 Scope。
@@ -285,7 +285,7 @@ powercontext doctor dsh
 
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
-| `POWERCONTEXT_DSH_BASE_URL` | `http://127.0.0.1:8000` | 插件使用的 Server 地址 |
+| `POWERCONTEXT_DSH_BASE_URL` | `http://127.0.0.1:17429` | 插件使用的 Server 地址 |
 | `POWERCONTEXT_DSH_ALLOW_INSECURE_HTTP` | `false` | 显式允许非环回明文 HTTP |
 | `POWERCONTEXT_DSH_SCOPE_ID` | 未设置 | 在 workspace binding 和 Server 默认值之前显式选择已有 Scope |
 | `POWERCONTEXT_DSH_AUTHORIZATION` | 未设置 | 插件 HTTP 请求使用的完整 `Bearer <token>` header |

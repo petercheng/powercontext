@@ -7,7 +7,7 @@ The integration uses each public surface for the job it fits:
 
 - a `UserPromptSubmit` hook first calls `POST /v1/context/prepare`, then
   independently captures the current prompt with `POST /v1/sources/content`;
-- Streamable HTTP MCP at `http://127.0.0.1:8000/mcp` gives WorkBuddy the
+- Streamable HTTP MCP at `http://127.0.0.1:17429/mcp` gives WorkBuddy the
   curated Memory and work-continuity tools;
 - the `powercontext-project-context` Skill turns an imperative such as `交接`,
   `交接当前工作`, or `handoff this work` into one durable, committed Handoff.
@@ -20,7 +20,7 @@ Scope is resolved by the Server from an explicit override, durable session and
 workspace bindings, or the Server default, in that order. The plugin hashes a
 workspace path only as an external binding key; it never derives a Scope ID.
 
-The plugin defaults to `http://127.0.0.1:8000`. Its Hook and MCP transport share
+The plugin defaults to `http://127.0.0.1:17429`. Its Hook and MCP transport share
 `POWERCONTEXT_WORKBUDDY_AUTHORIZATION` when optional bearer authentication is
 enabled. Prompt capture can be disabled with
 `POWERCONTEXT_WORKBUDDY_CAPTURE_PROMPTS=false`.

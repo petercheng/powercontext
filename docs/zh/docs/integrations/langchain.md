@@ -95,7 +95,7 @@ middleware 自己持有 `PowerContextScope`，并使用独立的 `POWERCONTEXT_L
 
 | 变量 | 默认值 | 用途 |
 | --- | --- | --- |
-| `POWERCONTEXT_LANGCHAIN_BASE_URL` | `http://127.0.0.1:8000` | PowerContext Server 地址 |
+| `POWERCONTEXT_LANGCHAIN_BASE_URL` | `http://127.0.0.1:17429` | PowerContext Server 地址 |
 | `POWERCONTEXT_LANGCHAIN_ALLOW_INSECURE_HTTP` | `false` | 显式允许非环回明文 HTTP |
 | `POWERCONTEXT_LANGCHAIN_TOKEN` | 未设置 | 传给 Client 的裸 bearer token |
 | `POWERCONTEXT_LANGCHAIN_SCOPE_ID` | 未设置 | 用于替代 Server 默认 Scope 的现有 Server Scope |

@@ -17,7 +17,7 @@ uv tool install --force "powercontext[cli,server] @ git+https://github.com/ocean
 powercontext setup openclaw
 ```
 
-Without an explicit URL, setup resolves environment and saved client settings; otherwise it uses `http://127.0.0.1:8000`.
+Without an explicit URL, setup resolves environment and saved client settings; otherwise it uses `http://127.0.0.1:17429`.
 
 A local checkout works as well:
 

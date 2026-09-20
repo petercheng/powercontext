@@ -68,10 +68,14 @@ def main(arguments: list[str] | None = None) -> int:
 
     try:
         with _redirect_output(options.stdout, options.stderr):
-            environment: dict[str, str] | None = None
+            environment: dict[str, str] = {}
             if options.env_file is not None:
                 identity = _environment_identity(options)
                 environment = load_protected_environment_file(options.env_file, expected=identity).values
+            # A package upgrade must not change a registered listener's defaults.
+            registered = urlsplit(options.endpoint)
+            environment.setdefault("POWERCONTEXT_SERVER_HTTP_HOST", registered.hostname or "127.0.0.1")
+            environment.setdefault("POWERCONTEXT_SERVER_HTTP_PORT", str(registered.port))
             with server_settings_context(environment=environment, data_dir=options.data_dir) as settings:
                 expected = _endpoint(settings.http.host, settings.http.port)
                 if expected != options.endpoint or not is_loopback_host(settings.http.host):

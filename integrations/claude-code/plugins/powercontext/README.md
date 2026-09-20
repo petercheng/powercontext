@@ -20,7 +20,7 @@ Scope is resolved by the Server from an explicit override, the current session
 or workspace binding, and finally the Server default. Bindings let multiple
 agents share the same Scope without deriving identities locally.
 
-The plugin defaults to `http://127.0.0.1:8000`. Its Hook and MCP transport share
+The plugin defaults to `http://127.0.0.1:17429`. Its Hook and MCP transport share
 `POWERCONTEXT_CLAUDE_AUTHORIZATION` when optional bearer authentication is
 enabled. Prompt capture can be disabled through the plugin's `capture_prompts`
 option or by setting `POWERCONTEXT_CLAUDE_CAPTURE_PROMPTS=false`.

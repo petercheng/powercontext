@@ -5,7 +5,7 @@ description: 通过 HTTP 调用 PowerContext Server，并找到完整 OpenAPI �
 
 # HTTP API
 
-HTTP API 是访问 PowerContext Server 的语言无关接口。默认 base URL 为 `http://127.0.0.1:8000`。
+HTTP API 是访问 PowerContext Server 的语言无关接口。默认 base URL 为 `http://127.0.0.1:17429`。
 
 如果你要把 PowerContext 接入自己的 AI 应用，而不是查找单个字段，请先完成
 [HTTP API 生命周期教程](api-quickstart.md)。本页保留为路径、契约和错误语义参考。
@@ -32,7 +32,7 @@ Authorization: Bearer <token>
 下面的示例使用两个可选 shell 变量：
 
 ```bash
-POWERCONTEXT_URL=http://127.0.0.1:8000
+POWERCONTEXT_URL=http://127.0.0.1:17429
 POWERCONTEXT_AUTH_HEADER="Authorization: Bearer ${POWERCONTEXT_CLIENT_API_TOKEN}"
 ```
 

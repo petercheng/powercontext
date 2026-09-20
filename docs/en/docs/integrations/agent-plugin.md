@@ -38,7 +38,7 @@ uv run powercontext server run
 The package points compatible agents to:
 
 ```text
-http://127.0.0.1:8000/mcp
+http://127.0.0.1:17429/mcp
 ```
 
 For a remote Server, configure the MCP URL in the loading host. This package delegates transport to that host and

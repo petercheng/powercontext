@@ -67,7 +67,7 @@ powercontext service uninstall
 
 ## Choose the network boundary
 
-The default Server listens on `127.0.0.1:8000` without authentication. This is suitable for clients on the same
+The default Server listens on `127.0.0.1:17429` without authentication. This is suitable for clients on the same
 machine. Do not change the listener to a non-loopback address while authentication is disabled.
 
 For access from another machine:
@@ -129,7 +129,7 @@ Run it with a named volume and publish the port only on the host loopback interf
 ```bash
 docker run --rm \
   --name powercontext-server \
-  --publish 127.0.0.1:8000:8000 \
+  --publish 127.0.0.1:17429:8000 \
   --volume powercontext-data:/data \
   powercontext-server:local
 ```
@@ -152,7 +152,7 @@ For Docker, pass the already-loaded variables without putting the token value in
 ```bash
 docker run --rm \
   --name powercontext-server \
-  --publish 127.0.0.1:8000:8000 \
+  --publish 127.0.0.1:17429:8000 \
   --volume powercontext-data:/data \
   --env POWERCONTEXT_SERVER_ACCESS_MODE=enforced \
   --env POWERCONTEXT_SERVER_AUTH_TOKEN \
@@ -180,13 +180,13 @@ Disabling it does not affect team API or MCP access. For personal setup, see
 Use liveness to determine whether the process can answer HTTP requests:
 
 ```bash
-curl --fail http://127.0.0.1:8000/health/live
+curl --fail http://127.0.0.1:17429/health/live
 ```
 
 Use readiness before sending application traffic:
 
 ```bash
-curl --fail http://127.0.0.1:8000/health/ready
+curl --fail http://127.0.0.1:17429/health/ready
 ```
 
 Readiness returns HTTP 503 when a required runtime or database binding is unavailable. An optional inference provider
@@ -195,7 +195,7 @@ can make the response `degraded` with HTTP 200 while database-backed operations 
 inference, also require the response `status` to be `ready`:
 
 ```bash
-curl --fail --silent --show-error http://127.0.0.1:8000/health/ready \
+curl --fail --silent --show-error http://127.0.0.1:17429/health/ready \
   | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data["status"]); sys.exit(data["status"] != "ready")'
 ```
 
@@ -204,7 +204,7 @@ After enabling authentication, verify a protected endpoint as well:
 ```bash
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/v1/capabilities
+  http://127.0.0.1:17429/v1/capabilities
 ```
 
 See [HTTP API](../develop/http-api.md) for request examples and [Configuration](configuration.md) for

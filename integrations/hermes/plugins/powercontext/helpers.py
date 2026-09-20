@@ -26,7 +26,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BASE_URL = "http://127.0.0.1:8000"
+DEFAULT_BASE_URL = "http://127.0.0.1:17429"
 DEFAULT_MAX_BYTES = 8000
 DEFAULT_RETRIEVAL_LIMIT = 8
 DEFAULT_TIMEOUT = 5.0

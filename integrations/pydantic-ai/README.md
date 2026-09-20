@@ -49,7 +49,7 @@ Environment variables use the `POWERCONTEXT_PYDANTIC_AI_` prefix.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `BASE_URL` | `http://127.0.0.1:8000` | PowerContext Server HTTP base URL |
+| `BASE_URL` | `http://127.0.0.1:17429` | PowerContext Server HTTP base URL |
 | `ALLOW_INSECURE_HTTP` | `false` | Explicitly allow non-loopback HTTP; HTTPS certificate validation stays enabled |
 | `TOKEN` | unset | Bare Server token; the Client adds the `Bearer` scheme |
 | `SCOPE_ID` | unset | Existing explicit Server Scope; unset selects the Server default |

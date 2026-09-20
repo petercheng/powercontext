@@ -26,6 +26,7 @@ from dataclasses import replace
 from importlib.metadata import version
 from pathlib import Path
 from typing import cast
+from urllib.parse import urlsplit
 
 from powercontext.cli.env_file import environment_context
 from powercontext.paths import POWERCONTEXT_HOME_ENV, powercontext_data_dir
@@ -237,6 +238,9 @@ class ServiceController:
         return self.status()
 
     def _build_definition(self, env_file: Path | None, *, start_on_login: bool) -> ServiceDefinition:
+        previous = self._adapter.inspect().definition
+        if env_file is None and previous is not None and previous.env_file is not None:
+            env_file = Path(previous.env_file.path)
         try:
             loaded_env = load_protected_environment_file(env_file) if env_file is not None else None
         except ProtectedEnvironmentFileError as error:
@@ -258,9 +262,15 @@ class ServiceController:
             environment_context({}, clear={POWERCONTEXT_HOME_ENV}) if loaded_env is not None else nullcontext()
         )
         try:
+            environment = dict(loaded_env.values) if loaded_env is not None else {}
+            if previous is not None:
+                registered = urlsplit(previous.endpoint)
+                environment.setdefault("POWERCONTEXT_SERVER_HTTP_HOST", registered.hostname or "127.0.0.1")
+                environment.setdefault("POWERCONTEXT_SERVER_HTTP_PORT", str(registered.port))
+                environment.setdefault(POWERCONTEXT_HOME_ENV, previous.data_dir)
             with (
                 clean_home_context,
-                server_settings_context(environment=loaded_env.values if loaded_env is not None else None) as settings,
+                server_settings_context(environment=environment or None) as settings,
             ):
                 host = settings.http.host
                 if not is_loopback_host(host):

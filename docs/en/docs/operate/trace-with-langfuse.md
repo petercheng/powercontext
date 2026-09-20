@@ -119,7 +119,7 @@ authentication is enabled, provide a valid `POWERCONTEXT_CLIENT_API_TOKEN`; do n
 the repository. The capabilities check also requires `server.observe`:
 
 ```bash
-export POWERCONTEXT_BASE_URL="${POWERCONTEXT_BASE_URL:-http://127.0.0.1:8000}"
+export POWERCONTEXT_BASE_URL="${POWERCONTEXT_BASE_URL:-http://127.0.0.1:17429}"
 export POWERCONTEXT_CLIENT_SERVER_URL="$POWERCONTEXT_BASE_URL"
 ```
 
@@ -143,7 +143,7 @@ the client token first; the requests below add an `Authorization: Bearer` header
 `server.admin`. Writing a Source and flushing Memory require `scope.contribute` for the Scope.
 
 ```bash
-export POWERCONTEXT_BASE_URL="${POWERCONTEXT_BASE_URL:-http://127.0.0.1:8000}"
+export POWERCONTEXT_BASE_URL="${POWERCONTEXT_BASE_URL:-http://127.0.0.1:17429}"
 export POWERCONTEXT_IDEMPOTENCY_KEY="tracing-example-$(date +%s)-$"
 
 if [[ -n "${POWERCONTEXT_CLIENT_API_TOKEN:-}" ]]; then

@@ -154,7 +154,7 @@ def test_setup_workbuddy_installs_from_a_local_checkout(tmp_path: Path, monkeypa
     mcp = json.loads((home / "mcp.json").read_text(encoding="utf-8"))
     assert mcp["mcpServers"]["powercontext"]["type"] == "http"
     assert mcp["mcpServers"]["powercontext"]["url"] == (
-        "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp"
+        "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp"
     )
     assert mcp["mcpServers"]["powercontext"]["headers"] == {
         "Authorization": "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
@@ -200,7 +200,7 @@ def test_setup_workbuddy_preserves_existing_settings_and_mcp(tmp_path: Path, mon
     mcp = json.loads((home / "mcp.json").read_text(encoding="utf-8"))
     assert mcp["mcpServers"]["other-server"] == {"type": "stdio", "command": "other", "args": []}
     assert mcp["mcpServers"]["powercontext"]["url"] == (
-        "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp"
+        "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp"
     )
 
 

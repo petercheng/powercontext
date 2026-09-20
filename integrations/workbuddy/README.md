@@ -13,7 +13,7 @@ The integration has three capability layers:
 - a `UserPromptSubmit` hook asks the Runtime to prepare one final, bounded
   context value before WorkBuddy analyzes the prompt, then independently
   captures the prompt as Source evidence;
-- Streamable HTTP MCP at `http://127.0.0.1:8000/mcp` gives WorkBuddy explicit
+- Streamable HTTP MCP at `http://127.0.0.1:17429/mcp` gives WorkBuddy explicit
   Memory and work-continuity tools (`search_memory`, `list_memory_entries`,
   `handoff_current_work`, `commit_handoff`, and so on);
 - the `powercontext-project-context` Skill turns an imperative such as `交接`,
@@ -129,11 +129,11 @@ Merge the following `mcpServers` entry into `~/.workbuddy/mcp.json`:
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp",
+      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp",
       "headers": {
         "Authorization": "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
       },
-      "description": "PowerContext agent memory & handoff MCP server (local service on port 8000)"
+      "description": "PowerContext agent memory & handoff MCP server (local service on port 17429)"
     }
   }
 }
@@ -180,12 +180,12 @@ WorkBuddy session when the Server is reachable.
 
 ## Configuration
 
-The hook uses `http://127.0.0.1:8000` by default. Environment variables
+The hook uses `http://127.0.0.1:17429` by default. Environment variables
 override the defaults; restart WorkBuddy after changing them.
 
 | Variable | Purpose |
 | --- | --- |
-| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext server URL (default `http://127.0.0.1:8000`). |
+| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext server URL (default `http://127.0.0.1:17429`). |
 | `POWERCONTEXT_WORKBUDDY_ALLOW_INSECURE_HTTP` | Explicit non-loopback HTTP consent; overrides common and saved consent, including `false`. |
 | `POWERCONTEXT_WORKBUDDY_AUTHORIZATION` | Complete authorization header, e.g. `Bearer <token>` |
 | `POWERCONTEXT_WORKBUDDY_SCOPE_ID` | Explicit server-owned Scope ID |

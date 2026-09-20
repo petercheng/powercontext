@@ -46,7 +46,7 @@ class PowerContextSettings(ClientTransportSettings):
     )
 
     transport_host: ClassVar[str] = "pydantic-ai"
-    base_url: str = "http://127.0.0.1:8000"
+    base_url: str = "http://127.0.0.1:17429"
     token: SecretStr | None = Field(default=None, repr=False)
     scope_id: str | None = Field(default=None, min_length=1, max_length=MAX_SCOPE_ID_LENGTH)
     timeout: float = Field(default=10, gt=0)

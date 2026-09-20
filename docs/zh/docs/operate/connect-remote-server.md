@@ -80,5 +80,5 @@ MiniMax 和通用 Agent Plugin 由宿主负责 MCP 传输，没有单独的 Powe
 
 远程访问仍应启用 Server 鉴权。Server 的监听安全检查与 Receiver 注册检查是独立机制，客户端选项不能代替它们。
 
-另一种方式是在 Agent 所在机器运行 `ssh -N -L 18000:127.0.0.1:8000 your-server`，再配置
+另一种方式是在 Agent 所在机器运行 `ssh -N -L 18000:127.0.0.1:17429 your-server`，再配置
 `http://127.0.0.1:18000`，无需允许非环回明文 HTTP。参见[部署 Server](deploy-server.md)。

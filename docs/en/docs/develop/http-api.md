@@ -6,7 +6,7 @@ description: Call the PowerContext Server over HTTP and find the complete OpenAP
 # HTTP API
 
 The HTTP API is the language-neutral interface to a running PowerContext Server. The default base URL is
-`http://127.0.0.1:8000`.
+`http://127.0.0.1:17429`.
 
 If you are integrating PowerContext into your own AI application rather than looking up one field, start with the
 [HTTP API lifecycle tutorial](api-quickstart.md). This page remains the path, contract, and
@@ -37,7 +37,7 @@ Authorization: Bearer <token>
 The examples below use an optional shell variable:
 
 ```bash
-POWERCONTEXT_URL=http://127.0.0.1:8000
+POWERCONTEXT_URL=http://127.0.0.1:17429
 POWERCONTEXT_AUTH_HEADER="Authorization: Bearer ${POWERCONTEXT_CLIENT_API_TOKEN}"
 ```
 

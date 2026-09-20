@@ -31,7 +31,7 @@ export interface ResolvedConfig {
 }
 
 const DEFAULTS: ResolvedConfig = {
-  baseUrl: 'http://127.0.0.1:8000',
+  baseUrl: 'http://127.0.0.1:17429',
   allowInsecureHttp: false,
   scopeId: undefined,
   authorization: undefined,

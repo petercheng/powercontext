@@ -44,7 +44,7 @@ OpenCode 会要求确认；Candidate 的批准和拒绝仍由用户通过 CLI �
 启动 OpenCode 前设置环境变量：
 
 ```bash
-export POWERCONTEXT_OPENCODE_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_OPENCODE_BASE_URL=http://127.0.0.1:17429
 export POWERCONTEXT_OPENCODE_CAPTURE_PROMPTS=true
 opencode
 ```

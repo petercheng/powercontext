@@ -46,7 +46,7 @@ asks for confirmation before a durable mutation. Candidate approval and rejectio
 Set variables before starting OpenCode:
 
 ```bash
-export POWERCONTEXT_OPENCODE_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_OPENCODE_BASE_URL=http://127.0.0.1:17429
 export POWERCONTEXT_OPENCODE_CAPTURE_PROMPTS=true
 opencode
 ```

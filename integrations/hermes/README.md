@@ -66,7 +66,7 @@ powercontext server run
 
 ## Configuration
 
-The provider uses `http://127.0.0.1:8000` by default. Run the generic Hermes
+The provider uses `http://127.0.0.1:17429` by default. Run the generic Hermes
 memory setup wizard and select `PowerContext` to configure and activate it
 interactively; the wizard writes non-sensitive values to
 `$HERMES_HOME/powercontext/config.json`, stores the authorization header in
@@ -84,7 +84,7 @@ Configuration can also be stored manually in `$HERMES_HOME/powercontext/config.j
 
 ```json
 {
-  "base_url": "http://127.0.0.1:8000",
+  "base_url": "http://127.0.0.1:17429",
   "max_bytes": 8000,
   "timeout": 5,
   "capture_turns": true,

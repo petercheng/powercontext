@@ -51,7 +51,7 @@ async def main():
     family = os.environ["POWERCONTEXT_TAG_FAMILY"]
     artifact = os.environ["POWERCONTEXT_TAG_ARTIFACT"]
     async with PowerContextClient(
-        "http://127.0.0.1:8000", token=os.getenv("POWERCONTEXT_SERVER_AUTH_TOKEN")
+        "http://127.0.0.1:17429", token=os.getenv("POWERCONTEXT_SERVER_AUTH_TOKEN")
     ) as client:
         current = await client.get_artifact_tags(scope, family, artifact)
         if current is None:

@@ -113,11 +113,11 @@ Merge the following `mcpServers` entry into `~/.workbuddy/mcp.json`:
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp",
+      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp",
       "headers": {
         "Authorization": "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
       },
-      "description": "PowerContext agent memory & handoff MCP server (local service on port 8000)"
+      "description": "PowerContext agent memory & handoff MCP server (local service on port 17429)"
     }
   }
 }
@@ -217,7 +217,7 @@ changing them.
 
 | Variable | Purpose |
 | --- | --- |
-| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext server URL (default `http://127.0.0.1:8000`) |
+| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext server URL (default `http://127.0.0.1:17429`) |
 | `POWERCONTEXT_WORKBUDDY_ALLOW_INSECURE_HTTP` | Explicitly permit non-loopback plaintext HTTP for hooks (default `false`) |
 | `POWERCONTEXT_WORKBUDDY_AUTHORIZATION` | Complete authorization header, e.g. `Bearer <token>` |
 | `POWERCONTEXT_WORKBUDDY_SCOPE_ID` | Explicit server-owned Scope ID |

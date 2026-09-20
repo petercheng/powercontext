@@ -90,7 +90,7 @@ await graph.ainvoke(state, context=PowerContextScope())
 
 | 变量 | 默认值 | 用途 |
 | --- | --- | --- |
-| `POWERCONTEXT_LANGGRAPH_BASE_URL` | `http://127.0.0.1:8000` | PowerContext Server 地址 |
+| `POWERCONTEXT_LANGGRAPH_BASE_URL` | `http://127.0.0.1:17429` | PowerContext Server 地址 |
 | `POWERCONTEXT_LANGGRAPH_ALLOW_INSECURE_HTTP` | `false` | 显式允许非环回明文 HTTP |
 | `POWERCONTEXT_LANGGRAPH_TOKEN` | 未设置 | 转发给 `PowerContextClient` 的裸 token |
 | `POWERCONTEXT_LANGGRAPH_SCOPE_ID` | 未设置 | 用于替代 Server 默认 Scope 的现有 Server Scope |

@@ -22,6 +22,7 @@ from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import SettingsConfigDict
 
 from powercontext.client.transport_policy import ClientTransportSettings, normalize_client_url
+from powercontext.defaults import DEFAULT_SERVER_URL
 from powercontext.transport import is_plaintext_non_loopback
 
 
@@ -44,7 +45,7 @@ class ClientSettings(ClientTransportSettings):
     )
 
     transport_url_field: ClassVar[str] = "server_url"
-    server_url: str = "http://127.0.0.1:8000"
+    server_url: str = DEFAULT_SERVER_URL
     api_token: SecretStr | None = Field(default=None, repr=False)
     timeout: float = Field(default=10.0, gt=0)
 

@@ -82,7 +82,7 @@ Configuration is read through pydantic-settings with the prefix `POWERCONTEXT_LA
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `POWERCONTEXT_LANGGRAPH_BASE_URL` | `http://127.0.0.1:8000` | PowerContext Server URL |
+| `POWERCONTEXT_LANGGRAPH_BASE_URL` | `http://127.0.0.1:17429` | PowerContext Server URL |
 | `POWERCONTEXT_LANGGRAPH_ALLOW_INSECURE_HTTP` | `false` | Explicitly allow non-loopback HTTP; HTTPS certificate validation stays enabled |
 | `POWERCONTEXT_LANGGRAPH_TOKEN` | unset | Bearer token forwarded to `PowerContextClient` |
 | `POWERCONTEXT_LANGGRAPH_SCOPE_ID` | unset | Existing Server Scope to use instead of the Server default |

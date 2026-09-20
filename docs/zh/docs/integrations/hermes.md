@@ -58,7 +58,7 @@ Memory、Handoff、Experience、Skill、审核、统计、trace 和 Scope 命令
 slash command 提供足够的调用上下文，因此该插件会拒绝 gateway 调用；gateway 会话应使用 provider 提供的
 Hermes tools。
 
-provider 默认连接 `http://127.0.0.1:8000`。Server 依次解析显式 Scope、持久 session binding、持久 workspace
+provider 默认连接 `http://127.0.0.1:17429`。Server 依次解析显式 Scope、持久 session binding、持久 workspace
 binding 和默认 Scope。Hermes 只把 workspace 路径哈希用作外部 binding key，不会根据 profile、user、repository
 或目录生成 Scope ID。
 

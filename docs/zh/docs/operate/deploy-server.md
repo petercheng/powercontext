@@ -61,7 +61,7 @@ powercontext service uninstall
 
 ## 选择网络边界
 
-Server 默认在未启用鉴权的情况下监听 `127.0.0.1:8000`，适合本机客户端使用。鉴权关闭时，不要把监听地址改为非
+Server 默认在未启用鉴权的情况下监听 `127.0.0.1:17429`，适合本机客户端使用。鉴权关闭时，不要把监听地址改为非
 loopback 地址。
 
 如果需要从其他机器访问：
@@ -120,7 +120,7 @@ docker build \
 ```bash
 docker run --rm \
   --name powercontext-server \
-  --publish 127.0.0.1:8000:8000 \
+  --publish 127.0.0.1:17429:8000 \
   --volume powercontext-data:/data \
   powercontext-server:local
 ```
@@ -143,7 +143,7 @@ powercontext server run
 ```bash
 docker run --rm \
   --name powercontext-server \
-  --publish 127.0.0.1:8000:8000 \
+  --publish 127.0.0.1:17429:8000 \
   --volume powercontext-data:/data \
   --env POWERCONTEXT_SERVER_ACCESS_MODE=enforced \
   --env POWERCONTEXT_SERVER_AUTH_TOKEN \
@@ -167,13 +167,13 @@ Cookie，最长八小时；HTTPS 下设置 Secure。反向代理应正确传递�
 使用 liveness 判断进程能否响应 HTTP 请求：
 
 ```bash
-curl --fail http://127.0.0.1:8000/health/live
+curl --fail http://127.0.0.1:17429/health/live
 ```
 
 发送业务流量前检查 readiness：
 
 ```bash
-curl --fail http://127.0.0.1:8000/health/ready
+curl --fail http://127.0.0.1:17429/health/ready
 ```
 
 必需的 Runtime 或数据库绑定不可用时，readiness 返回 HTTP 503。可选推理服务故障时可能返回 HTTP 200 和
@@ -181,7 +181,7 @@ curl --fail http://127.0.0.1:8000/health/ready
 推理能力，应进一步要求响应中的 `status` 为 `ready`：
 
 ```bash
-curl --fail --silent --show-error http://127.0.0.1:8000/health/ready \
+curl --fail --silent --show-error http://127.0.0.1:17429/health/ready \
   | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data["status"]); sys.exit(data["status"] != "ready")'
 ```
 
@@ -190,7 +190,7 @@ curl --fail --silent --show-error http://127.0.0.1:8000/health/ready \
 ```bash
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/v1/capabilities
+  http://127.0.0.1:17429/v1/capabilities
 ```
 
 请求示例见 [HTTP API](../develop/http-api.md)，全部 Server 设置见[配置](configuration.md)。

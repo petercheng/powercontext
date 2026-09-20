@@ -127,7 +127,7 @@ changing PowerContext environment variables.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `POWERCONTEXT_PI_BASE_URL` | `http://127.0.0.1:8000` | Server base URL |
+| `POWERCONTEXT_PI_BASE_URL` | `http://127.0.0.1:17429` | Server base URL |
 | `POWERCONTEXT_PI_ALLOW_INSECURE_HTTP` | `false` | Explicitly permit non-loopback plaintext HTTP |
 | `POWERCONTEXT_PI_SCOPE_ID` | unset | Explicit existing Scope before workspace binding and Server default |
 | `POWERCONTEXT_PI_AUTHORIZATION` | unset | Complete `Bearer <token>` header for package HTTP requests |

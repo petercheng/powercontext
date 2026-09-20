@@ -34,7 +34,7 @@ CONFIG_SCHEMA = ProviderConfigSchema(
             key="base_url",
             label="PowerContext server URL",
             kind=KIND_TEXT,
-            default="http://127.0.0.1:8000",
+            default="http://127.0.0.1:17429",
             description="Base URL of the running PowerContext server.",
             inline=True,
         ),

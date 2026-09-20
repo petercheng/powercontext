@@ -36,6 +36,7 @@ from powercontext.builtin.runtime.config import (
     InferenceConfig,
     RuntimeConfig,
 )
+from powercontext.defaults import DEFAULT_SERVER_PORT
 from powercontext.paths import default_database_path, default_seekdb_path, sqlite_url
 from powercontext.transport import is_loopback_host
 
@@ -112,7 +113,7 @@ class HttpConfig(BaseModel):
     """HTTP listener configuration."""
 
     host: str = "127.0.0.1"
-    port: int = Field(default=8000, ge=1, le=65535)
+    port: int = Field(default=DEFAULT_SERVER_PORT, ge=1, le=65535)
 
 
 class McpConfig(BaseModel):

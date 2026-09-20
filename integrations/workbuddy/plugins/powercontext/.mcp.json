@@ -2,7 +2,7 @@
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp",
+      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp",
       "headers": {
         "Authorization": "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
       },

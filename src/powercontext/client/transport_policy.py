@@ -26,8 +26,10 @@ from pydantic import HttpUrl, ModelWrapValidatorHandler, PrivateAttr, TypeAdapte
 from pydantic_settings import BaseSettings, InitSettingsSource, PydanticBaseSettingsSource
 from typing_extensions import override
 
+from powercontext.defaults import DEFAULT_SERVER_URL
+
 _HTTP_URL = TypeAdapter(HttpUrl)
-_DEFAULT_SERVER_URL = "http://127.0.0.1:8000"
+_DEFAULT_SERVER_URL = DEFAULT_SERVER_URL
 
 
 def client_config_file() -> Path:

@@ -42,7 +42,7 @@ class PowerContextLangGraphSettings(ClientTransportSettings):
     )
 
     transport_host: ClassVar[str] = "langgraph"
-    base_url: str = "http://127.0.0.1:8000"
+    base_url: str = "http://127.0.0.1:17429"
     # A bearer credential: typed SecretStr and hidden from reprs so it never surfaces in a traceback or trace.
     token: SecretStr | None = Field(default=None, repr=False)
     scope_id: str | None = None

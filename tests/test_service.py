@@ -368,7 +368,7 @@ def test_service_controller_installs_and_starts_one_native_registration(tmp_path
 
     assert status.ok
     assert adapter.definition is not None
-    assert adapter.definition.endpoint == "http://127.0.0.1:8000"
+    assert adapter.definition.endpoint == "http://127.0.0.1:17429"
     assert adapter.events == ["write", "reload", "enable", "start:True"]
 
 
@@ -1683,6 +1683,19 @@ def test_service_launcher_hands_control_to_the_foreground_server_runner(
     run_server.assert_called_once()
     assert run_server.call_args.args[0].http.host == "127.0.0.1"
     assert run_server.call_args.args[0].http.port == 8000
+
+
+def test_service_upgrade_preserves_registered_endpoint_and_data(tmp_path: Path) -> None:
+    adapter = FakeAdapter(tmp_path)
+    previous = _definition(tmp_path, package_version="old", data_dir=str(tmp_path / "existing-data"))
+    adapter.write(adapter.render(previous))
+
+    status = ServiceController(adapter, probe=_manager_probe(adapter), sleep=lambda _: None).install()
+
+    assert status.ok
+    assert adapter.definition is not None
+    assert adapter.definition.endpoint == "http://127.0.0.1:8000"
+    assert adapter.definition.data_dir == previous.data_dir
 
 
 def test_service_launcher_pins_the_recorded_data_directory(

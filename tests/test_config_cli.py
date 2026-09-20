@@ -228,7 +228,7 @@ def test_server_settings_context_does_not_implicitly_discover_dotenv(
     monkeypatch.delenv("POWERCONTEXT_SERVER_HTTP_PORT", raising=False)
 
     with server_settings_context() as settings:
-        assert settings.http.port == 8000
+        assert settings.http.port == 17429
 
 
 @pytest.mark.parametrize(

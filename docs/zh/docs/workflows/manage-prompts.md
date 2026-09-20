@@ -30,7 +30,7 @@ Auto 模式，或先配置支持该操作的运行时，不要把失败响应当
 首次创建 Custom Prompt：
 
 ```bash
-export POWERCONTEXT_URL=http://127.0.0.1:8000
+export POWERCONTEXT_URL=http://127.0.0.1:17429
 export POWERCONTEXT_SCOPE_ID='已有的-scope-id'
 curl --fail --request POST \
   --header 'Content-Type: application/json' \

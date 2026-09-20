@@ -126,7 +126,7 @@ Start the service:
 powercontext server run
 ```
 
-If port 8000 is already in use, stop the conflicting process. For a different Server endpoint, pass its
+If port 17429 is already in use, stop the conflicting process. For a different Server endpoint, pass its
 base URL when checking it:
 
 ```bash
@@ -134,7 +134,7 @@ powercontext doctor --server-url http://127.0.0.1:9000
 powercontext --server-url http://127.0.0.1:9000 ready
 ```
 
-The bundled Codex and Claude Code plugins and Pi package use port 8000 by default. A liveness failure means the process
+The bundled Codex and Claude Code plugins and Pi package use port 17429 by default. A liveness failure means the process
 cannot answer health requests, so readiness is not checked. `not_ready` with HTTP 503 means the Runtime or database cannot accept work.
 `degraded` with HTTP 200 means a configured inference capability failed while database-backed operations remain
 available. Human and JSON output retain the Server's individual check statuses.
@@ -166,7 +166,7 @@ export POWERCONTEXT_DEPLOYMENT_TOKEN="your-token"
 
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/metrics
+  http://127.0.0.1:17429/metrics
 ```
 
 You can check the Server's advertised capabilities in the same way:
@@ -174,7 +174,7 @@ You can check the Server's advertised capabilities in the same way:
 ```bash
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/v1/capabilities
+  http://127.0.0.1:17429/v1/capabilities
 ```
 
 See [Server authentication and permissions](configuration.md#server) for Principal, access-control, and Bearer token configuration.

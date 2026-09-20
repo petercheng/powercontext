@@ -75,7 +75,7 @@ def install_dsh_plugin(*, source: str, ref: str) -> DshSetupResult:
         data_dir=str(data_dir),
         authorization_state=configure_stored_authorization(
             "dsh",
-            server_url=setup_server_url("dsh", "http://127.0.0.1:8000"),
+            server_url=setup_server_url("dsh", "http://127.0.0.1:17429"),
             value=setup_authorization_value("dsh"),
         ),
     )

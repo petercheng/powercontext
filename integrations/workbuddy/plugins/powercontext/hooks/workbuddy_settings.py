@@ -37,7 +37,7 @@ _FALSE_VALUES = frozenset({"0", "false", "no", "off"})
 class WorkBuddyPluginSettings:
     """Configuration loaded once by a WorkBuddy hooks entry point."""
 
-    server_url: str = "http://127.0.0.1:8000"
+    server_url: str = "http://127.0.0.1:17429"
     authorization: str | None = None
     scope_id: str | None = None
     context_assembly: dict[str, object] | None = None
@@ -72,7 +72,7 @@ class WorkBuddyPluginSettings:
         return cls(
             server_url=_first_environment("POWERCONTEXT_WORKBUDDY_SERVER_URL", "POWERCONTEXT_CLIENT_SERVER_URL")
             or saved.get("server_url")
-            or "http://127.0.0.1:8000",
+            or "http://127.0.0.1:17429",
             authorization=_first_environment("POWERCONTEXT_WORKBUDDY_AUTHORIZATION"),
             scope_id=_first_environment("POWERCONTEXT_WORKBUDDY_SCOPE_ID"),
             context_assembly=_environment_object("POWERCONTEXT_WORKBUDDY_CONTEXT_ASSEMBLY"),

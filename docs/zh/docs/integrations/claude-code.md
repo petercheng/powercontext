@@ -203,7 +203,7 @@ claude plugin marketplace remove powercontext
 
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
-| `POWERCONTEXT_CLAUDE_SERVER_URL` | `http://127.0.0.1:8000` | Hook 使用的 Server base URL |
+| `POWERCONTEXT_CLAUDE_SERVER_URL` | `http://127.0.0.1:17429` | Hook 使用的 Server base URL |
 | `POWERCONTEXT_CLAUDE_ALLOW_INSECURE_HTTP` | `false` | 显式允许 PowerContext 请求使用非环回明文 HTTP |
 | `POWERCONTEXT_CLAUDE_SCOPE_ID` | 未设置 | 覆盖持久 binding 和 Server 默认 Scope |
 | `POWERCONTEXT_CLAUDE_AUTHORIZATION` | 未设置 | Hook 与 MCP 请求使用的完整 `Bearer <token>` header |

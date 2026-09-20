@@ -124,14 +124,14 @@ pi list
 powercontext server run
 ```
 
-如果 8000 端口已被占用，请停止冲突进程。若 Server 有意使用其他地址，可在检查时传入 base URL：
+如果 17429 端口已被占用，请停止冲突进程。若 Server 有意使用其他地址，可在检查时传入 base URL：
 
 ```bash
 powercontext doctor --server-url http://127.0.0.1:9000
 powercontext --server-url http://127.0.0.1:9000 ready
 ```
 
-随附的 Codex 和 Claude Code 插件以及 Pi package 默认使用 8000 端口。liveness 失败表示进程无法响应健康请求，此时不会继续检查
+随附的 Codex 和 Claude Code 插件以及 Pi package 默认使用 17429 端口。liveness 失败表示进程无法响应健康请求，此时不会继续检查
 readiness。HTTP 503 的 `not_ready` 表示 Runtime 或数据库无法接受工作；HTTP 200 的 `degraded` 表示已配置的
 推理能力异常，但数据库操作仍然可用。Human 与 JSON 输出都会保留 Server 返回的各项检查状态。
 
@@ -162,7 +162,7 @@ export POWERCONTEXT_DEPLOYMENT_TOKEN="your-token"
 
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/metrics
+  http://127.0.0.1:17429/metrics
 ```
 
 也可以检查 Server 当前提供的能力：
@@ -170,7 +170,7 @@ curl --fail \
 ```bash
 curl --fail \
   --header "Authorization: Bearer ${POWERCONTEXT_DEPLOYMENT_TOKEN}" \
-  http://127.0.0.1:8000/v1/capabilities
+  http://127.0.0.1:17429/v1/capabilities
 ```
 
 Principal、Access Control 和 Bearer token 的配置方式见[Server 鉴权与权限配置](configuration.md#server)。

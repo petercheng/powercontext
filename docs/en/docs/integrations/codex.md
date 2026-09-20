@@ -165,7 +165,7 @@ The Server Scheduler processes new Sources at the configured interval.
 ## Check both Hook and MCP connections
 
 The Hook derives its Server URL from the installed plugin's `.mcp.json`, which MCP also reads.
-Both default to `http://127.0.0.1:8000`. For a custom port, SSH forwarding, or HTTPS, update that shared file.
+Both default to `http://127.0.0.1:17429`. For a custom port, SSH forwarding, or HTTPS, update that shared file.
 It takes precedence over `POWERCONTEXT_CODEX_SERVER_URL`; exporting that variable alone does not change the endpoint.
 `setup codex` updates the installed MCP URL. The native MCP client reads authorization from the host process environment
 in this form:
@@ -175,7 +175,7 @@ in this form:
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "http://127.0.0.1:8000/mcp",
+      "url": "http://127.0.0.1:17429/mcp",
       "required": false,
       "env_http_headers": {
         "Authorization": "POWERCONTEXT_CODEX_AUTHORIZATION"

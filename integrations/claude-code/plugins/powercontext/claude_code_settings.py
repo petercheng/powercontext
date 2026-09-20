@@ -49,7 +49,7 @@ def _is_loopback_host(host: str) -> bool:
 class ClaudeCodePluginSettings:
     """Configuration loaded once by a plugin entry point."""
 
-    server_url: str = "http://127.0.0.1:8000"
+    server_url: str = "http://127.0.0.1:17429"
     authorization: str | None = None
     scope_id: str | None = None
     context_assembly: dict[str, object] | None = None
@@ -100,7 +100,7 @@ class ClaudeCodePluginSettings:
             or _optional_text(server_url)
             or _first_environment("CLAUDE_PLUGIN_OPTION_SERVER_URL", "POWERCONTEXT_CLIENT_SERVER_URL")
             or saved.get("server_url")
-            or "http://127.0.0.1:8000"
+            or "http://127.0.0.1:17429"
         )
         return cls(
             server_url=resolved_server_url,

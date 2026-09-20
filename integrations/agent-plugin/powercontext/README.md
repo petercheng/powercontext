@@ -24,7 +24,7 @@ uv run powercontext server run
 The default MCP endpoint is:
 
 ```text
-http://127.0.0.1:8000/mcp
+http://127.0.0.1:17429/mcp
 ```
 
 For a verified local host-loading procedure, use an Agent Plugins client that

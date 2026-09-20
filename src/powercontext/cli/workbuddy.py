@@ -64,10 +64,10 @@ WORKBUDDY_HOOK_MODULES = (
 WORKBUDDY_SCRIPT_MODULES = ("__init__.py", "workspace_scope.py")
 WORKBUDDY_SERVER_URL_ENV = "POWERCONTEXT_WORKBUDDY_SERVER_URL"
 WORKBUDDY_AUTHORIZATION_ENV = "POWERCONTEXT_WORKBUDDY_AUTHORIZATION"
-WORKBUDDY_MCP_URL = f"${{{WORKBUDDY_SERVER_URL_ENV}:-http://127.0.0.1:8000}}/mcp"
+WORKBUDDY_MCP_URL = f"${{{WORKBUDDY_SERVER_URL_ENV}:-http://127.0.0.1:17429}}/mcp"
 WORKBUDDY_MCP_AUTHORIZATION = f"${{{WORKBUDDY_AUTHORIZATION_ENV}:-}}"
 WORKBUDDY_LEGACY_MCP_URL = "http://127.0.0.1:8000/mcp"
-WORKBUDDY_MCP_DESCRIPTION = "PowerContext agent memory & handoff MCP server (local service on port 8000)"
+WORKBUDDY_MCP_DESCRIPTION = "PowerContext agent memory & handoff MCP server (local service on port 17429)"
 WORKBUDDY_HOOK_STATUS_MESSAGE = "Syncing PowerContext"
 WORKBUDDY_HOOK_TIMEOUT = 30
 
@@ -146,7 +146,7 @@ def install_workbuddy_plugin(*, source: str, ref: str, server_url: str | None = 
         data_dir=str(data_dir),
         authorization_state=configure_stored_authorization(
             "workbuddy",
-            server_url=setup_server_url("workbuddy", "http://127.0.0.1:8000"),
+            server_url=setup_server_url("workbuddy", "http://127.0.0.1:17429"),
             value=setup_authorization_value("workbuddy"),
         ),
     )
@@ -298,6 +298,8 @@ def _workbuddy_mcp_entry(existing: Any) -> dict[str, Any]:
         "description": WORKBUDDY_MCP_DESCRIPTION,
         "disabled": False,
     }
+    if isinstance(existing, dict) and _is_legacy_workbuddy_mcp_entry(existing):
+        entry["url"] = f"${{{WORKBUDDY_SERVER_URL_ENV}:-http://127.0.0.1:8000}}/mcp"
     if isinstance(existing, dict) and not _is_legacy_workbuddy_mcp_entry(existing):
         existing_url = existing.get("url")
         if isinstance(existing_url, str) and existing_url.strip():
@@ -313,7 +315,7 @@ def _is_legacy_workbuddy_mcp_entry(existing: dict[str, Any]) -> bool:
         "type": "http",
         "url": WORKBUDDY_LEGACY_MCP_URL,
         "headers": {},
-        "description": WORKBUDDY_MCP_DESCRIPTION,
+        "description": "PowerContext agent memory & handoff MCP server (local service on port 8000)",
         "disabled": False,
     }
 

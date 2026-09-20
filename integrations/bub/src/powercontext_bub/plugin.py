@@ -69,7 +69,7 @@ class PowerContextSettings(ClientTransportSettings, Settings):
     )
 
     transport_host: ClassVar[str] = "bub"
-    base_url: HttpUrl = HttpUrl("http://127.0.0.1:8000")
+    base_url: HttpUrl = HttpUrl("http://127.0.0.1:17429")
     scope_id: str | None = Field(default=None, min_length=1)
     timeout: float = Field(default=10, gt=0)
     max_bytes: int = Field(default=8000, ge=512, le=32768)

@@ -66,7 +66,7 @@ powercontext server run
 
 With no environment variables, the Server:
 
-- binds to `127.0.0.1:8000`;
+- binds to `127.0.0.1:17429`;
 - enables Streamable HTTP MCP at `/mcp`;
 - creates a default Scope;
 - creates a persistent SQLite database in the operating system's user data directory;
@@ -90,7 +90,7 @@ powercontext config validate --env-file /path/to/powercontext.env
 powercontext server run --env-file /path/to/powercontext.env
 ```
 
-Open `http://127.0.0.1:8000/dashboard/home` and enter the same token. Use the actual port if you change it.
+Open `http://127.0.0.1:17429/dashboard/home` and enter the same token. Use the actual port if you change it.
 The token also protects the Server API and MCP, so connected Agents need it too. The CLI does not automatically load
 a directory's `.env` file.
 

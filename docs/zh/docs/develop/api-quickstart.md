@@ -24,7 +24,7 @@ powercontext server run
 
 ```bash
 powercontext doctor
-curl --fail --silent --show-error http://127.0.0.1:8000/health/live
+curl --fail --silent --show-error http://127.0.0.1:17429/health/live
 ```
 
 默认本地配置使用 SQLite。显式 Memory、手工提交 Experience 和 Skill proposal 都不要求 inference provider。
@@ -34,7 +34,7 @@ curl --fail --silent --show-error http://127.0.0.1:8000/health/live
 为一个项目或租户创建稳定 Scope，并保留 Server 返回的 ID：
 
 ```bash
-export POWERCONTEXT_URL=http://127.0.0.1:8000
+export POWERCONTEXT_URL=http://127.0.0.1:17429
 export POWERCONTEXT_SCOPE="$(
   curl --fail --silent --show-error \
     --header 'Content-Type: application/json' \
@@ -69,7 +69,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
-BASE_URL = os.environ.get("POWERCONTEXT_URL", "http://127.0.0.1:8000").rstrip("/")
+BASE_URL = os.environ.get("POWERCONTEXT_URL", "http://127.0.0.1:17429").rstrip("/")
 SCOPE_ID = os.environ["POWERCONTEXT_SCOPE"]
 TOKEN = os.environ.get("POWERCONTEXT_TOKEN")
 

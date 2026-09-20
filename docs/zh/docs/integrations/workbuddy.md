@@ -105,11 +105,11 @@ PowerContext 的 Python executable，把 `<WORKBUDDY_HOOKS_DIR>` 替换为 hooks
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp",
+      "url": "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:17429}/mcp",
       "headers": {
         "Authorization": "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
       },
-      "description": "PowerContext agent memory & handoff MCP server (local service on port 8000)"
+      "description": "PowerContext agent memory & handoff MCP server (local service on port 17429)"
     }
   }
 }
@@ -190,7 +190,7 @@ export POWERCONTEXT_WORKBUDDY_FLUSH_ON_CAPTURE=true
 
 | 变量 | 用途 |
 | --- | --- |
-| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext Server URL（默认 `http://127.0.0.1:8000`） |
+| `POWERCONTEXT_WORKBUDDY_SERVER_URL` | PowerContext Server URL（默认 `http://127.0.0.1:17429`） |
 | `POWERCONTEXT_WORKBUDDY_ALLOW_INSECURE_HTTP` | 显式允许 Hook 使用非环回明文 HTTP（默认 `false`） |
 | `POWERCONTEXT_WORKBUDDY_AUTHORIZATION` | 完整的 Authorization header，例如 `Bearer <token>` |
 | `POWERCONTEXT_WORKBUDDY_SCOPE_ID` | 显式的服务端 Scope ID |

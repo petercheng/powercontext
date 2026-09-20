@@ -45,7 +45,7 @@ helper, and exercise explicit Memory and Handoff workflows against public and
 authenticated Server instances. Contract tests also reject machine-specific
 Windows paths in the distributed integration files.
 
-The default Server endpoint is `http://127.0.0.1:8000`. Set
+The default Server endpoint is `http://127.0.0.1:17429`. Set
 `POWERCONTEXT_CLAUDE_AUTHORIZATION` to a complete `Bearer <token>` value
 before starting Claude Code when the Server requires authentication. The MCP
 configuration expands this environment variable into its `Authorization` header.

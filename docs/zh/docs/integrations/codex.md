@@ -152,7 +152,7 @@ powercontext setup codex
 ## 核对 Hook 和 MCP 连接
 
 Hook 的 Server 地址从已安装插件 `.mcp.json` 派生，MCP 也读取同一文件。
-本机默认是 `http://127.0.0.1:8000`；自定义端口、SSH 转发或 HTTPS 时，修改该文件使两条路径使用同一地址。
+本机默认是 `http://127.0.0.1:17429`；自定义端口、SSH 转发或 HTTPS 时，修改该文件使两条路径使用同一地址。
 该配置优先于 `POWERCONTEXT_CODEX_SERVER_URL`，不能只靠导出此环境变量改变连接地址。
 `setup codex` 会更新已安装插件的 MCP URL。原生 MCP 客户端按以下方式从宿主进程环境读取鉴权：
 
@@ -161,7 +161,7 @@ Hook 的 Server 地址从已安装插件 `.mcp.json` 派生，MCP 也读取同�
   "mcpServers": {
     "powercontext": {
       "type": "http",
-      "url": "http://127.0.0.1:8000/mcp",
+      "url": "http://127.0.0.1:17429/mcp",
       "required": false,
       "env_http_headers": {
         "Authorization": "POWERCONTEXT_CODEX_AUTHORIZATION"

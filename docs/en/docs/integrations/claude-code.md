@@ -218,7 +218,7 @@ run with `--keep-data`.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `POWERCONTEXT_CLAUDE_SERVER_URL` | `http://127.0.0.1:8000` | Server base URL used by the Hook |
+| `POWERCONTEXT_CLAUDE_SERVER_URL` | `http://127.0.0.1:17429` | Server base URL used by the Hook |
 | `POWERCONTEXT_CLAUDE_ALLOW_INSECURE_HTTP` | `false` | Explicitly permit non-loopback plaintext HTTP for PowerContext requests |
 | `POWERCONTEXT_CLAUDE_SCOPE_ID` | unset | Override durable bindings and the Server default Scope |
 | `POWERCONTEXT_CLAUDE_AUTHORIZATION` | unset | Complete `Bearer <token>` header for Hook and MCP requests |

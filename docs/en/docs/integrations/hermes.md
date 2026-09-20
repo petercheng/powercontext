@@ -59,7 +59,7 @@ Tab/Down to inspect the available Memory, Handoff, Experience, Skill, review, st
 commands. Hermes 0.20.4 does not provide enough invocation context to route gateway slash commands safely, so the
 companion rejects gateway invocations; use the provider's Hermes tools in gateway sessions.
 
-The provider uses `http://127.0.0.1:8000` by default. The Server resolves an explicit Scope first, then durable session
+The provider uses `http://127.0.0.1:17429` by default. The Server resolves an explicit Scope first, then durable session
 and workspace bindings, and finally its default Scope. Hermes hashes the workspace path only as an external binding
 key; it does not generate Scope IDs from profiles, users, repositories, or directories.
 

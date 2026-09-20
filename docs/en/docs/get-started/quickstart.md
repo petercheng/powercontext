@@ -56,7 +56,7 @@ powercontext server run --env-file .env
 ```
 
 Keep the terminal running. Open the Dashboard URL printed by the wizard; the local default is
-`http://127.0.0.1:8000/dashboard/home`. Sign in with the **Server token**, not a model API key.
+`http://127.0.0.1:17429/dashboard/home`. Sign in with the **Server token**, not a model API key.
 An empty Dashboard is expected before you capture data. For operation after closing the terminal, use a
 [persistent personal service](../operate/deploy-server.md#run-a-persistent-personal-server).
 

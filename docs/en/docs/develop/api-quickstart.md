@@ -24,7 +24,7 @@ Keep the Server running. In a second terminal, check the local process:
 
 ```bash
 powercontext doctor
-curl --fail --silent --show-error http://127.0.0.1:8000/health/live
+curl --fail --silent --show-error http://127.0.0.1:17429/health/live
 ```
 
 The default local setup uses SQLite and does not require an inference provider for explicit Memory or manual
@@ -35,7 +35,7 @@ Experience and Skill proposals.
 Create a stable Scope for one project or tenant and keep the returned Server-owned ID:
 
 ```bash
-export POWERCONTEXT_URL=http://127.0.0.1:8000
+export POWERCONTEXT_URL=http://127.0.0.1:17429
 export POWERCONTEXT_SCOPE="$(
   curl --fail --silent --show-error \
     --header 'Content-Type: application/json' \
@@ -71,7 +71,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
-BASE_URL = os.environ.get("POWERCONTEXT_URL", "http://127.0.0.1:8000").rstrip("/")
+BASE_URL = os.environ.get("POWERCONTEXT_URL", "http://127.0.0.1:17429").rstrip("/")
 SCOPE_ID = os.environ["POWERCONTEXT_SCOPE"]
 TOKEN = os.environ.get("POWERCONTEXT_TOKEN")
 

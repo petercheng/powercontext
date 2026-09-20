@@ -45,7 +45,7 @@ Server settings use the `POWERCONTEXT_SERVER_` prefix.
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `POWERCONTEXT_SERVER_HTTP_HOST` | `127.0.0.1` | Listener address |
-| `POWERCONTEXT_SERVER_HTTP_PORT` | `8000` | Listener port |
+| `POWERCONTEXT_SERVER_HTTP_PORT` | `17429` | Listener port |
 | `POWERCONTEXT_SERVER_WORKSPACE` | Server startup directory | Resolution root for local project Agent Skill folders |
 | `POWERCONTEXT_SERVER_MCP_ENABLED` | `true` | Enable Streamable HTTP MCP |
 | `POWERCONTEXT_SERVER_MCP_PATH` | `/mcp` | MCP path |
@@ -422,7 +422,7 @@ For configuration and capability verification, see [Configure vector search](../
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `POWERCONTEXT_CLIENT_SERVER_URL` | `http://127.0.0.1:8000` | Server base URL |
+| `POWERCONTEXT_CLIENT_SERVER_URL` | `http://127.0.0.1:17429` | Server base URL |
 | `POWERCONTEXT_CLIENT_API_TOKEN` | unset | Bearer token sent to an authenticated Server |
 | `POWERCONTEXT_CLIENT_TIMEOUT` | `10` | HTTP timeout in seconds |
 

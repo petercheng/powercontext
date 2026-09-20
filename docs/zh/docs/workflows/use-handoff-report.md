@@ -13,7 +13,7 @@ Handoff Report 是各个选中 Scope 最新 committed Handoff 的只读投影。
 
 ```bash
 powercontext server run
-export POWERCONTEXT_URL=http://127.0.0.1:8000
+export POWERCONTEXT_URL=http://127.0.0.1:17429
 ```
 
 Handoff Report API route 默认启用。启用 Bearer 鉴权后，还需设置 authorization header 变量，并在每个请求中加入

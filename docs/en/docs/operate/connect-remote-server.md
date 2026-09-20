@@ -87,5 +87,5 @@ content can be read or modified in transit. IP allowlists limit access but do no
 Keep Server authentication enabled for remote access. The Server's own binding and Receiver enrollment safety
 checks remain separate; the client opt-in is not a replacement for those settings.
 
-An SSH tunnel is an alternative: run `ssh -N -L 18000:127.0.0.1:8000 your-server` on the agent machine, then configure
+An SSH tunnel is an alternative: run `ssh -N -L 18000:127.0.0.1:17429 your-server` on the agent machine, then configure
 `http://127.0.0.1:18000` without the insecure opt-in. See [Deploy the Server](deploy-server.md).

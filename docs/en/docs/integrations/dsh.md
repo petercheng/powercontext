@@ -56,11 +56,11 @@ See [the complete Memory loop](../get-started/configure-models.md) for provider 
 In another terminal, point DSH at that Server and launch the host:
 
 ```bash
-export POWERCONTEXT_DSH_BASE_URL=http://127.0.0.1:8000
+export POWERCONTEXT_DSH_BASE_URL=http://127.0.0.1:17429
 dsh web
 ```
 
-In PowerShell, use `$env:POWERCONTEXT_DSH_BASE_URL = "http://127.0.0.1:8000"` before `dsh web`.
+In PowerShell, use `$env:POWERCONTEXT_DSH_BASE_URL = "http://127.0.0.1:17429"` before `dsh web`.
 If the Server listens elsewhere, change the URL accordingly. Use `POWERCONTEXT_DSH_AUTHORIZATION` for authentication.
 Do not copy Server model credentials into the plugin configuration. Leave `POWERCONTEXT_DSH_SCOPE_ID` unset for
 the Server default/workspace binding, or set it to an existing Scope intentionally.
@@ -299,7 +299,7 @@ powercontext doctor dsh
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `POWERCONTEXT_DSH_BASE_URL` | `http://127.0.0.1:8000` | Server base URL used by the plugin |
+| `POWERCONTEXT_DSH_BASE_URL` | `http://127.0.0.1:17429` | Server base URL used by the plugin |
 | `POWERCONTEXT_DSH_ALLOW_INSECURE_HTTP` | `false` | Explicitly permit non-loopback plaintext HTTP |
 | `POWERCONTEXT_DSH_SCOPE_ID` | unset | Explicit existing Scope before workspace binding and Server default |
 | `POWERCONTEXT_DSH_AUTHORIZATION` | unset | Complete `Bearer <token>` header for plugin HTTP requests |

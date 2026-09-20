@@ -40,7 +40,7 @@ class PowerContextLangChainSettings(ClientTransportSettings):
     )
 
     transport_host: ClassVar[str] = "langchain"
-    base_url: str = "http://127.0.0.1:8000"
+    base_url: str = "http://127.0.0.1:17429"
     token: SecretStr | None = Field(default=None, repr=False)
     scope_id: str | None = None
     timeout: float = Field(default=10.0, gt=0)

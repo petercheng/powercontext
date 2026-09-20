@@ -52,7 +52,7 @@ export type ConfigSource = 'environment' | 'plugin' | 'saved' | 'default'
 
 const DEFAULTS: ResolvedConfig = {
   sources: { baseUrl: 'default', authorization: 'default', scopeId: 'default' },
-  baseUrl: 'http://127.0.0.1:8000',
+  baseUrl: 'http://127.0.0.1:17429',
   allowInsecureHttp: false,
   authorization: undefined,
   scopeId: undefined,
