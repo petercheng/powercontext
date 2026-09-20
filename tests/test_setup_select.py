@@ -34,6 +34,13 @@ from powercontext.cli.system import Diagnostic, DiagnosticStatus, SetupError, se
 FIRST_CLASS_HOSTS = ("codex", "claude-code", "dsh", "openclaw", "opencode", "pi", "hermes")
 
 
+@pytest.fixture(autouse=True)
+def isolated_native_configuration(tmp_path, monkeypatch):
+    for name in ("CODEX_HOME", "CLAUDE_CONFIG_DIR", "DSH_HOME", "OPENCLAW_STATE_DIR"):
+        monkeypatch.setenv(name, str(tmp_path / name))
+    monkeypatch.delenv("OPENCLAW_CONFIG_PATH", raising=False)
+
+
 def _cli():
     return create_cli([setup_app])
 
@@ -301,19 +308,19 @@ def test_setup_select_passes_source_ref_and_host_specific_defaults(monkeypatch) 
 
     assert result.exit_code == 0
     installers["codex"].assert_called_once_with(
-        source="oceanbase/powercontext", ref="tested-ref", server_url="http://127.0.0.1:8000"
+        source="oceanbase/powercontext", ref="tested-ref", server_url="http://127.0.0.1:17429"
     )
     installers["claude-code"].assert_called_once_with(
         source="oceanbase/powercontext",
         ref="tested-ref",
-        server_url="http://127.0.0.1:8000",
+        server_url="http://127.0.0.1:17429",
         capture_prompts=True,
         allow_insecure_http=False,
     )
     installers["openclaw"].assert_called_once_with(
         source="oceanbase/powercontext",
         ref="tested-ref",
-        server_url="http://127.0.0.1:8000",
+        server_url="http://127.0.0.1:17429",
         allow_insecure_http=False,
     )
     installers["opencode"].assert_called_once_with(source="oceanbase/powercontext", ref="tested-ref")

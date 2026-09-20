@@ -128,7 +128,12 @@ def existing_native_endpoint(host: str) -> str | None:
     """Preserve existing native endpoints when setup has no connection override."""
 
     if host != "workbuddy":
-        return None
+        from powercontext.cli.native_transport import _codex_url, _native_settings, _url
+
+        if host == "codex":
+            return _codex_url()
+        native, url_key, _consent_key = _native_settings(host)
+        return _url(native[url_key]) if url_key in native else None
     from powercontext.cli.workbuddy import workbuddy_home
 
     path = workbuddy_home() / "mcp.json"
@@ -221,8 +226,15 @@ def transport_diagnostic(host: str) -> Diagnostic:
 
 
 def add_transport_diagnostic(diagnostics: dict[str, Diagnostic], host: str) -> None:
-    """Append policy problems without changing healthy installation reports."""
+    """Report the host's effective endpoint as well as transport policy failures."""
 
     diagnostic = transport_diagnostic(host)
     if not diagnostic.ok:
         diagnostics["transport"] = diagnostic
+    else:
+        from powercontext.cli.system import Diagnostic, DiagnosticStatus
+
+        diagnostics["client_connection"] = Diagnostic(
+            status=DiagnosticStatus.OK,
+            detail=f"{diagnostic.detail}; client configuration: {client_config_file()}",
+        )

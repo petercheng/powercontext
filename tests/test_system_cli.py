@@ -1396,6 +1396,7 @@ def test_default_doctor_checks_server_without_inspecting_codex(monkeypatch) -> N
         "package",
         "service_support",
         "service_registration",
+        "client_connection",
         "server_liveness",
         "server_readiness",
     ]
@@ -1545,7 +1546,9 @@ def test_default_doctor_preserves_degraded_checks_in_human_and_json_output(monke
     assert "server readiness: degraded - http://127.0.0.1:17429 status=degraded" in human.output
     assert "  inference.embedding: misconfigured" in human.output
     assert machine.exit_code == 1
-    assert json.loads(machine.output) == {
+    payload = json.loads(machine.output)
+    assert payload["checks"].pop("client_connection")["ok"] is True
+    assert payload == {
         "ok": False,
         "status": "degraded",
         "checks": {
@@ -1606,7 +1609,9 @@ def test_doctor_codex_reports_missing_cli_and_skipped_plugin(monkeypatch) -> Non
     result = CliRunner().invoke(create_cli([doctor_app]), ["doctor", "codex", "--json"])
 
     assert result.exit_code == 1
-    assert json.loads(result.output) == {
+    payload = json.loads(result.output)
+    assert payload["checks"].pop("client_connection")["ok"] is True
+    assert payload == {
         "ok": False,
         "status": "failed",
         "checks": {
@@ -1641,7 +1646,9 @@ def test_doctor_claude_code_reports_missing_cli_and_skipped_plugin(monkeypatch) 
     result = CliRunner().invoke(create_cli([doctor_app]), ["doctor", "claude-code", "--json"])
 
     assert result.exit_code == 1
-    assert json.loads(result.output) == {
+    payload = json.loads(result.output)
+    assert payload["checks"].pop("client_connection")["ok"] is True
+    assert payload == {
         "ok": False,
         "status": "failed",
         "checks": {
@@ -1738,7 +1745,9 @@ def test_doctor_dsh_reports_missing_cli_and_skipped_plugin(monkeypatch) -> None:
     result = CliRunner().invoke(create_cli([doctor_app]), ["doctor", "dsh", "--json"])
 
     assert result.exit_code == 1
-    assert json.loads(result.output) == {
+    payload = json.loads(result.output)
+    assert payload["checks"].pop("client_connection")["ok"] is True
+    assert payload == {
         "ok": False,
         "status": "failed",
         "checks": {

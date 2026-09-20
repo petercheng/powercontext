@@ -72,6 +72,36 @@ def _environment_url(*names: str) -> str | None:
     return next((os.environ[name].strip() for name in names if os.environ.get(name, "").strip()), None)
 
 
+def installed_codex_configuration_file() -> Path:
+    """Locate the active installed version without choosing among old cache entries."""
+
+    from powercontext.cli.system import _required_string, _run_codex_json
+
+    cache = _home("CODEX_HOME", ".codex") / "plugins" / "cache"
+    installed = _run_codex_json("plugin", "list").get("installed", [])
+    if not isinstance(installed, list):
+        raise ValueError("Cannot read installed Codex plugins")  # noqa: TRY003, TRY004
+    candidates = [
+        plugin
+        for plugin in installed
+        if isinstance(plugin, dict)
+        and plugin.get("name") == "powercontext"
+        and plugin.get("installed") is True
+        and plugin.get("enabled") is True
+    ]
+    if len(candidates) != 1:
+        raise ValueError(  # noqa: TRY003
+            "Cannot select a unique installed Codex plugin configuration; "
+            "locate the active PowerContext .mcp.json with `codex plugin list --json` and update its URL explicitly"
+        )
+    plugin = candidates[0]
+    marketplace = _required_string(plugin, "marketplaceName")
+    version = _required_string(plugin, "version")
+    if any(part in {"", ".", ".."} or "/" in part or "\\" in part for part in (marketplace, version)):
+        raise ValueError("Invalid Codex plugin cache location")  # noqa: TRY003
+    return cache / marketplace / "powercontext" / version / ".mcp.json"
+
+
 def _codex_url() -> str | None:
     cache = _home("CODEX_HOME", ".codex") / "plugins" / "cache"
     try:
@@ -86,7 +116,14 @@ def _codex_url() -> str | None:
             raise ValueError(_UNKNOWN)
         urls.add(_url(raw))
     if len(urls) > 1:
-        raise ValueError("Cannot determine the active PowerContext endpoint from multiple Codex cache versions")  # noqa: TRY003
+        try:
+            active = installed_codex_configuration_file()
+        except (RuntimeError, ValueError) as error:
+            raise ValueError(  # noqa: TRY003
+                "Cannot determine the active PowerContext endpoint from multiple Codex cache versions"
+            ) from error
+        entry = _object_at(_read(active), "mcpServers", "powercontext")
+        return _url(entry.get("url"))
     return next(iter(urls), None)
 
 

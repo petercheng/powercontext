@@ -419,6 +419,9 @@ def setup_codex(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -430,6 +433,11 @@ def setup_codex(
         transport = prepare_setup_transport(
             "codex", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_codex_plugin(source=source, ref=ref, server_url=transport.server_url)
         save_setup_transport(transport)
     except SetupError as error:
@@ -475,6 +483,9 @@ def setup_claude_code(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -482,12 +493,18 @@ def setup_claude_code(
 ) -> None:
     """Install the PowerContext Claude Code plugin."""
 
-    plan = _claude_setup_plan()
-    _write_claude_setup_plan(plan)
+    if not configure_only:
+        plan = _claude_setup_plan()
+        _write_claude_setup_plan(plan)
     try:
         transport = prepare_setup_transport(
             "claude-code", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_claude_code_plugin(
             source=source,
             ref=ref,
@@ -529,6 +546,9 @@ def setup_dsh(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -542,6 +562,11 @@ def setup_dsh(
         transport = prepare_setup_transport(
             "dsh", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_dsh_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -582,6 +607,9 @@ def setup_openclaw(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -595,6 +623,11 @@ def setup_openclaw(
         transport = prepare_setup_transport(
             "openclaw", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_openclaw_plugin(
             source=source,
             ref=ref,
@@ -637,6 +670,9 @@ def setup_pi(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -650,6 +686,11 @@ def setup_pi(
         transport = prepare_setup_transport(
             "pi", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_pi_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -690,6 +731,9 @@ def setup_opencode(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -703,6 +747,11 @@ def setup_opencode(
         transport = prepare_setup_transport(
             "opencode", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_opencode_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -744,6 +793,9 @@ def setup_hermes(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -757,6 +809,11 @@ def setup_hermes(
         transport = prepare_setup_transport(
             "hermes", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_hermes_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -847,6 +904,9 @@ def setup_workbuddy(
             "--allow-insecure-http/--no-allow-insecure-http", help="Explicitly allow unencrypted remote HTTP."
         ),
     ] = None,
+    configure_only: Annotated[
+        bool, typer.Option("--configure-only", help="Update connection settings without installing the plugin.")
+    ] = False,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Write the result as JSON."),
@@ -860,6 +920,11 @@ def setup_workbuddy(
         transport = prepare_setup_transport(
             "workbuddy", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
+        if configure_only:
+            from powercontext.cli.reconfigure import configure_connection
+
+            configure_connection(transport, json_output=json_output)
+            return
         result = install_workbuddy_plugin(source=source, ref=ref, server_url=transport.server_url)
         save_setup_transport(transport)
     except SetupError as error:
@@ -1256,6 +1321,12 @@ def run_diagnostics(*, server_url: str | None = None, allow_insecure_http: bool 
         liveness = Diagnostic(status=DiagnosticStatus.FAILED, detail=str(error))
     else:
         service = _local_service_diagnostics(server_url)
+        from powercontext.client.transport_policy import client_config_file
+
+        service["client_connection"] = Diagnostic(
+            status=DiagnosticStatus.OK,
+            detail=f"{server_url}; client configuration: {client_config_file()}",
+        )
         if is_remote_http(server_url):
             service["transport"] = Diagnostic(
                 status=DiagnosticStatus.DEGRADED,

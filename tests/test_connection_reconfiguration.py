@@ -1,0 +1,230 @@
+# Copyright (c) 2026 OceanBase.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Explicit connection changes preserve installation state and unrelated preferences."""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from powercontext.cli.app import create_cli
+from powercontext.cli.system import setup_app
+from powercontext.client.transport_policy import client_config_file, load_client_settings
+
+HOSTS = ("codex", "claude-code", "dsh", "openclaw", "pi", "opencode", "hermes", "workbuddy")
+OLD_URL = "http://127.0.0.1:8000"
+NEW_URL = "http://127.0.0.1:18321"
+
+
+def _write(path: Path, payload: object) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload))
+    return path
+
+
+@pytest.fixture(autouse=True)
+def host_configuration(tmp_path, monkeypatch):
+    for name in os.environ:
+        if name.startswith("POWERCONTEXT_"):
+            monkeypatch.delenv(name)
+    monkeypatch.setenv("POWERCONTEXT_CLIENT_CONFIG_FILE", str(tmp_path / "clients.json"))
+    for name in ("CODEX_HOME", "CLAUDE_CONFIG_DIR", "WORKBUDDY_HOME", "HERMES_HOME", "DSH_HOME", "OPENCLAW_STATE_DIR"):
+        monkeypatch.setenv(name, str(tmp_path / name))
+    _write(
+        tmp_path / "CODEX_HOME/plugins/cache/test/powercontext/1.0/.mcp.json",
+        {
+            "mcpServers": {"powercontext": {"type": "http", "url": OLD_URL + "/mcp", "required": False}},
+        },
+    )
+    monkeypatch.setattr(
+        "powercontext.cli.system._run_codex_json",
+        lambda *_args: {
+            "installed": [
+                {
+                    "name": "powercontext",
+                    "installed": True,
+                    "enabled": True,
+                    "marketplaceName": "test",
+                    "version": "1.0",
+                }
+            ],
+        },
+    )
+    _write(
+        tmp_path / "CLAUDE_CONFIG_DIR/settings.json",
+        {
+            "pluginConfigs": {
+                "powercontext@powercontext": {"options": {"server_url": OLD_URL, "capture_prompts": False}}
+            },
+        },
+    )
+    _write(
+        tmp_path / "WORKBUDDY_HOME/mcp.json",
+        {
+            "mcpServers": {
+                "powercontext": {"type": "http", "url": OLD_URL + "/mcp", "disabled": False},
+                "other": {"url": "https://other.example/mcp"},
+            },
+        },
+    )
+    _write(tmp_path / "HERMES_HOME/powercontext/config.json", {"base_url": OLD_URL, "capture": False})
+    _write(
+        tmp_path / "OPENCLAW_STATE_DIR/openclaw.json",
+        {
+            "plugins": {"entries": {"memory-powercontext": {"config": {"endpoint": OLD_URL, "autoCapture": False}}}},
+        },
+    )
+
+
+@pytest.mark.parametrize("host", HOSTS)
+def test_configure_only_changes_connection_without_an_installation(host, tmp_path):
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        [
+            "setup",
+            host,
+            "--configure-only",
+            "--server-url",
+            NEW_URL,
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    report = json.loads(result.output)
+    assert report["server_url"] == NEW_URL
+    assert report["effective_server_url"] == NEW_URL
+    assert report["reload_required"] is True
+    assert load_client_settings(host)["server_url"] == NEW_URL
+    claude = json.loads((tmp_path / "CLAUDE_CONFIG_DIR/settings.json").read_text())
+    assert claude["pluginConfigs"]["powercontext@powercontext"]["options"]["capture_prompts"] is False
+    hermes = json.loads((tmp_path / "HERMES_HOME/powercontext/config.json").read_text())
+    assert hermes["capture"] is False
+    openclaw = json.loads((tmp_path / "OPENCLAW_STATE_DIR/openclaw.json").read_text())
+    assert openclaw["plugins"]["entries"]["memory-powercontext"]["config"]["autoCapture"] is False
+
+
+def test_reconfiguration_keeps_url_bound_credentials_until_explicitly_replaced(tmp_path):
+    from powercontext.cli.authorization import credential_path, write_stored_authorization
+
+    path = credential_path("codex")
+    write_stored_authorization(path, server_url=OLD_URL, value="old-secret")
+    original = path.read_bytes()
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        [
+            "setup",
+            "codex",
+            "--configure-only",
+            "--server-url",
+            NEW_URL,
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["authorization_state"] == "url_mismatch"
+    assert path.read_bytes() == original
+    assert "old-secret" not in result.output
+
+
+def test_failed_connection_write_restores_native_configuration(tmp_path, monkeypatch):
+    import powercontext.cli.system as system
+
+    native = tmp_path / "WORKBUDDY_HOME/mcp.json"
+    original = native.read_bytes()
+    write = system._write_bytes_atomically
+
+    def fail_shared(path, content):
+        if path == client_config_file():
+            raise OSError("simulated disk failure")  # noqa: TRY003
+        write(path, content)
+
+    monkeypatch.setattr(system, "_write_bytes_atomically", fail_shared)
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        [
+            "setup",
+            "workbuddy",
+            "--configure-only",
+            "--server-url",
+            NEW_URL,
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert native.read_bytes() == original
+    assert not client_config_file().exists()
+
+
+def test_configure_only_reports_an_environment_override(monkeypatch):
+    monkeypatch.setenv("POWERCONTEXT_PI_BASE_URL", OLD_URL)
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        [
+            "setup",
+            "pi",
+            "--configure-only",
+            "--server-url",
+            NEW_URL,
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    report = json.loads(result.output)
+    assert report["effective_server_url"] == OLD_URL
+    assert report["warnings"]
+    assert load_client_settings("pi")["server_url"] == NEW_URL
+
+
+@pytest.mark.parametrize("host", ["codex", "claude-code", "hermes", "openclaw", "workbuddy"])
+def test_repeated_setup_retains_native_endpoint_without_a_saved_client_file(host):
+    from powercontext.cli.transport import prepare_setup_transport
+
+    assert not client_config_file().exists()
+    assert prepare_setup_transport(host, json_output=True).server_url == OLD_URL
+
+
+def test_codex_reconfiguration_selects_the_active_version(tmp_path):
+    inactive = _write(
+        tmp_path / "CODEX_HOME/plugins/cache/test/powercontext/0.9/.mcp.json",
+        {
+            "mcpServers": {"powercontext": {"type": "http", "url": OLD_URL + "/mcp"}},
+        },
+    )
+    original = inactive.read_bytes()
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        [
+            "setup",
+            "codex",
+            "--configure-only",
+            "--server-url",
+            NEW_URL,
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["effective_server_url"] == NEW_URL
+    assert inactive.read_bytes() == original

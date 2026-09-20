@@ -124,7 +124,7 @@ pi list
 powercontext server run
 ```
 
-如果 17429 端口已被占用，请停止冲突进程。若 Server 有意使用其他地址，可在检查时传入 base URL：
+如果 17429 端口已被占用，请在 Server 配置中选择其他端口并重启。若 Server 有意使用其他地址，可在检查时传入 base URL：
 
 ```bash
 powercontext doctor --server-url http://127.0.0.1:9000
@@ -174,6 +174,32 @@ curl --fail \
 ```
 
 Principal、Access Control 和 Bearer token 的配置方式见[Server 鉴权与权限配置](configuration.md#server)。
+
+### 服务地址改变后修复客户端连接
+
+软件升级保留已有端口与数据库路径。主动修改监听端口时，先修改服务配置并重启；个人服务重新执行
+`powercontext service install` 刷新已记录的配置文件身份。客户端访问 URL 可能经过反向代理，不能从监听地址直接推导。
+
+在客户端机器上检查配置，并显式更新所选宿主：
+
+```bash
+powercontext config show --json
+powercontext service status --json
+powercontext doctor --server-url http://127.0.0.1:18321
+powercontext setup codex --configure-only --server-url http://127.0.0.1:18321 --json
+powercontext doctor codex --json
+```
+
+将 `codex` 替换为已使用的 `claude-code`、`dsh`、`openclaw`、`pi`、`opencode`、`hermes` 或 `workbuddy`。
+`--configure-only` 更新连接配置，不重新安装插件，不重启服务或宿主。输出包含配置文件位置、有效地址和重载提示。
+若环境变量覆盖了新配置，先调整该变量，再重载 MCP、重启宿主或开始新会话。OpenClaw 需重启 gateway。
+
+凭据仍绑定原服务 URL 时，输出 `url_mismatch`；通过原有的宿主认证环境变量或 `POWERCONTEXT_CLIENT_API_TOKEN`
+提供目标服务的凭据后重新配置。不会自动将旧凭据绑定到新地址。共享 `clients.json` 只保存连接偏好，诊断 JSON 不展示凭据。
+
+Agent 在 MCP 无法连接时应使用本地 CLI 或文件检查，先报告配置路径、当前 URL 和具体错误；在已获授权的范围内
+修订客户端连接。不要依赖已断开的 MCP 进行恢复，也不要通过试探端口猜测服务位置。
+
 
 ## 本地 tracing 示例与已有 Server 配置冲突
 

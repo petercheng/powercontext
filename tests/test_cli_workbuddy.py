@@ -440,6 +440,7 @@ def test_doctor_workbuddy_reports_failures_before_install(tmp_path: Path, monkey
     assert payload["ok"] is False
     assert payload["status"] == "failed"
     assert {name: check["status"] for name, check in payload["checks"].items()} == {
+        "client_connection": "ok",
         "hooks": "failed",
         "settings": "failed",
         "mcp": "failed",
@@ -467,6 +468,7 @@ def test_doctor_workbuddy_reports_ok_after_install(tmp_path: Path, monkeypatch) 
     assert payload["ok"] is True
     assert payload["status"] == "ok"
     assert {name: check["status"] for name, check in payload["checks"].items()} == {
+        "client_connection": "ok",
         "hooks": "ok",
         "settings": "ok",
         "mcp": "ok",

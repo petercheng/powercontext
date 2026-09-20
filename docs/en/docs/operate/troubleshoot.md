@@ -126,7 +126,7 @@ Start the service:
 powercontext server run
 ```
 
-If port 17429 is already in use, stop the conflicting process. For a different Server endpoint, pass its
+If port 17429 is already in use, select another port in the Server configuration and restart the Server. For a different Server endpoint, pass its
 base URL when checking it:
 
 ```bash
@@ -148,6 +148,35 @@ powercontext --json ready | jq -e '.status == "ready"' >/dev/null
 
 The command exits nonzero when `status` is `degraded`. To have PowerContext itself fail on a degraded result, use
 `powercontext doctor --json`; it exits nonzero unless the complete diagnostic result is `ok`.
+
+### Reconnect after an endpoint change
+
+Software upgrades retain configured ports and database locations. After intentionally changing a listener port, update
+the Server configuration and restart it. For a personal service, rerun `powercontext service install` to refresh the
+recorded environment-file identity. A client may use a reverse proxy, so its URL cannot be inferred from a bind address.
+
+Inspect configuration on the client machine and explicitly reconfigure the selected host:
+
+```bash
+powercontext config show --json
+powercontext service status --json
+powercontext doctor --server-url http://127.0.0.1:18321
+powercontext setup codex --configure-only --server-url http://127.0.0.1:18321 --json
+powercontext doctor codex --json
+```
+
+Replace `codex` with `claude-code`, `dsh`, `openclaw`, `pi`, `opencode`, `hermes`, or `workbuddy` as appropriate.
+`--configure-only` updates connection settings without reinstalling plugins or restarting either process. Its output
+includes configuration paths, the effective URL, and a reload instruction. If an environment variable overrides the
+saved URL, update that variable before reloading MCP or restarting the host. OpenClaw requires a gateway restart.
+
+An existing credential bound to the old URL is reported as `url_mismatch`. Supply the target endpoint's credential
+through the existing host authorization environment variable or `POWERCONTEXT_CLIENT_API_TOKEN` and reconfigure again.
+Old credentials are not rebound automatically. Shared `clients.json` stores connection preferences only; diagnostic JSON omits credentials.
+
+When MCP is disconnected, an agent should inspect local CLI output or files, report the configuration path, selected
+URL, and concrete error, then make authorized connection changes. Recovery does not depend on the disconnected MCP
+server and must not guess an endpoint by probing other ports.
 
 ### Permissions for metrics and capabilities
 
