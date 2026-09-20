@@ -5,7 +5,8 @@ description: Generate, inspect, validate, and run PowerContext from an explicit 
 
 # Configure a Server environment
 
-Use an explicit environment file when the Server needs inference, scheduling, storage, or deployment settings.
+Use `powercontext config init` to save a personal Server configuration in the user configuration directory.
+The explicit `.env` workflow below is useful for a project or deployment with its own configuration.
 
 ## 1. Generate the file
 
@@ -66,10 +67,10 @@ inference-dependent runtime features are configured, it also checks the Runtime 
 ## 3. Run the same configuration
 
 ```bash
-powercontext server run
+powercontext server run --env-file .env
 ```
 
-`server run` discovers `.env` in the current directory. Use `--env-file <path>` to select a different file or
+`server run` prefers the user `server.env`, falling back to a working-directory `.env`. The explicit option above selects the same file you generated. Use `--env-file <path>` to select a different file or
 `--no-env-file` to disable file loading. CLI options take precedence, followed by process environment variables, the
 selected file, and defaults. The command prints the resolved file path without printing credentials.
 

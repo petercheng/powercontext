@@ -331,7 +331,8 @@ def show_command(
     explicit_file = env_file is not None
     env_file = _configuration_file(env_file)
     try:
-        content = env_file.read_text(encoding="utf-8") if explicit_file or env_file.exists() else ""
+        exists = env_file.exists()
+        content = env_file.read_text(encoding="utf-8") if explicit_file or exists else ""
         values = parse_environment(content, source=str(env_file))
         recorded = _managed_metadata(content).get("credentials", "")
     except (ConfigError, EnvironmentFileError, OSError, UnicodeError) as error:
@@ -339,12 +340,12 @@ def show_command(
     recorded_credentials = {name for name in recorded.split(",") if name}
     if json_output:
         try:
-            report = _configuration_report(env_file if content else None, values, recorded_credentials)
+            report = _configuration_report(env_file if exists else None, values, recorded_credentials)
         except ValueError as error:
             _fail(str(error))
         typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
         return
-    typer.echo(f"Configuration file: {env_file} ({'loaded' if content else 'not found; using defaults/environment'})")
+    typer.echo(f"Configuration file: {env_file} ({'loaded' if exists else 'not found; using defaults/environment'})")
     for name in sorted(values):
         value = _redacted_value(name, values[name], recorded_credentials)
         typer.echo(f"{name}={value}")
@@ -377,7 +378,12 @@ def _configuration_file(path: Path | None) -> Path:
 
 
 def _redacted_value(name: str, value: str, credentials: set[str]) -> str:
-    if name == "POWERCONTEXT_SERVER_DATABASE_URL" and value.startswith("sqlite") and name not in credentials:
+    if (
+        name == "POWERCONTEXT_SERVER_DATABASE_URL"
+        and value.startswith(("sqlite:///", "sqlite+aiosqlite:///"))
+        and "?" not in value
+        and name not in credentials
+    ):
         return value
     if _is_secret_name(name) or name in credentials:
         return "<redacted>"
@@ -391,11 +397,17 @@ def _redacted_value(name: str, value: str, credentials: set[str]) -> str:
     return value
 
 
+def _canonical_server_name(name: str) -> str:
+    return name.upper() if name.upper().startswith("POWERCONTEXT_SERVER_") else name
+
+
 def _configuration_report(env_file: Path | None, values: dict[str, str], credentials: set[str]) -> dict[str, object]:
     from powercontext.client.transport_policy import client_config_file, resolve_client_transport
     from powercontext.paths import powercontext_data_dir
     from powercontext.server.configuration import server_settings_context
 
+    values = {_canonical_server_name(name): value for name, value in values.items()}
+    credentials = {_canonical_server_name(name) for name in credentials}
     with server_settings_context(env_file=env_file, process_environment_overrides=True) as settings:
         effective = {
             "POWERCONTEXT_SERVER_HTTP_HOST": settings.http.host,
@@ -411,9 +423,10 @@ def _configuration_report(env_file: Path | None, values: dict[str, str], credent
             effective["POWERCONTEXT_SERVER_DATABASE_PATH"] = str(database.path)
         else:
             effective["POWERCONTEXT_SERVER_DATABASE_URL"] = "<redacted>"
+    process_environment = {_canonical_server_name(name): value for name, value in os.environ.items()}
     environment = {
         name: value
-        for name, value in os.environ.items()
+        for name, value in process_environment.items()
         if name in values or name in effective or name.startswith("POWERCONTEXT_SERVER_")
     }
     assignments = {**values, **environment, **effective}

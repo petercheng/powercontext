@@ -475,7 +475,7 @@ def test_memory_setup_schema_exposes_powercontext_configuration(hermes_modules):
     schema = provider.get_config_schema()
     fields = {field["key"]: field for field in schema}
 
-    assert fields["base_url"]["default"] == "http://127.0.0.1:8000"
+    assert fields["base_url"]["default"] == "http://127.0.0.1:17429"
     assert fields["authorization"]["secret"] is True
     assert fields["authorization"]["env_var"] == "POWERCONTEXT_HERMES_AUTHORIZATION"
     assert fields["capture_pre_compress"]["choices"] == ["true", "false"]

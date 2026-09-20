@@ -111,10 +111,10 @@ def test_codex_settings_precedence_and_validation(
     environment = recall_module.CodexPluginSettings()
     explicit = recall_module.CodexPluginSettings(server_url="https://explicit.example/")
 
-    assert environment.server_url == "http://127.0.0.1:8000"
+    assert environment.server_url == "http://127.0.0.1:17429"
     assert environment.capture_prompts is False
     assert environment.request_timeout_seconds == 4.5
-    assert explicit.server_url == "http://127.0.0.1:8000"
+    assert explicit.server_url == "http://127.0.0.1:17429"
 
 
 def test_codex_settings_load_the_optional_mcp_authorization_environment(
@@ -161,7 +161,7 @@ def test_codex_settings_ignore_unscoped_legacy_names(
 ) -> None:
     monkeypatch.setenv("POWERCONTEXT_HTTP_URL", "https://legacy.example")
 
-    assert recall_module.CodexPluginSettings().server_url == "http://127.0.0.1:8000"
+    assert recall_module.CodexPluginSettings().server_url == "http://127.0.0.1:17429"
 
 
 @pytest.mark.parametrize(

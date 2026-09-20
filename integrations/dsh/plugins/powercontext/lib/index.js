@@ -15,9 +15,9 @@
  */
 
 import { createRequire } from "node:module";
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
@@ -1400,7 +1400,10 @@ function environmentBoolean(env, name$1) {
 function readSavedClient(host, env) {
 	const home = optionalText$1(env.HOME) ?? homedir();
 	const configuredPath = optionalText$1(env.POWERCONTEXT_CLIENT_CONFIG_FILE);
-	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? join(home, ".config", "powercontext", "clients.json");
+	const xdgConfig = optionalText$1(env.XDG_CONFIG_HOME);
+	const preferred = join(process.platform === "win32" ? optionalText$1(env.LOCALAPPDATA) ?? join(home, "AppData", "Local") : process.platform === "darwin" ? join(home, "Library", "Application Support") : xdgConfig && isAbsolute(xdgConfig) ? xdgConfig : join(home, ".config"), "powercontext", "clients.json");
+	const legacy = join(home, ".config", "powercontext", "clients.json");
+	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? (!existsSync(preferred) && existsSync(legacy) ? legacy : preferred);
 	let contents;
 	try {
 		contents = readFileSync(path, "utf8");
@@ -2753,7 +2756,7 @@ const DEFAULTS = {
 		authorization: "default",
 		scopeId: "default"
 	},
-	baseUrl: "http://127.0.0.1:8000",
+	baseUrl: "http://127.0.0.1:17429",
 	allowInsecureHttp: false,
 	authorization: void 0,
 	scopeId: void 0,

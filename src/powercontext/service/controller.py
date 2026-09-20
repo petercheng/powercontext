@@ -269,8 +269,14 @@ class ServiceController:
             environment = dict(loaded_env.values) if loaded_env is not None else {}
             if previous is not None:
                 registered = urlsplit(previous.endpoint)
-                environment.setdefault("POWERCONTEXT_SERVER_HTTP_HOST", registered.hostname or "127.0.0.1")
-                environment.setdefault("POWERCONTEXT_SERVER_HTTP_PORT", str(registered.port))
+                defaults = {
+                    "POWERCONTEXT_SERVER_HTTP_HOST": registered.hostname or "127.0.0.1",
+                    "POWERCONTEXT_SERVER_HTTP_PORT": str(registered.port),
+                }
+                configured_names = {name.casefold() for name in environment}
+                environment.update({
+                    name: value for name, value in defaults.items() if name.casefold() not in configured_names
+                })
                 environment.setdefault(POWERCONTEXT_HOME_ENV, previous.data_dir)
             with (
                 clean_home_context,

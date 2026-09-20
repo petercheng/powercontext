@@ -70,15 +70,14 @@ def test_explicit_file_and_port_override_user_configuration(tmp_path, monkeypatc
     assert observed[0].http.port == 18432
 
 
-def test_config_report_explains_effective_values_without_exposing_secrets(tmp_path, monkeypatch):
+@pytest.mark.parametrize("port_name", ["POWERCONTEXT_SERVER_HTTP_PORT", "powercontext_server_http_port"])
+def test_config_report_explains_effective_values_without_exposing_secrets(tmp_path, monkeypatch, port_name):
     path = default_server_env_file()
     path.parent.mkdir(parents=True)
     path.write_text(
-        "POWERCONTEXT_SERVER_HTTP_PORT=8000\n"
-        "POWERCONTEXT_SERVER_AUTH_TOKEN=private-token\n"
-        "POWERCONTEXT_SERVER_ACCESS_MODE=enforced\n"
+        f"{port_name}=8000\nPOWERCONTEXT_SERVER_AUTH_TOKEN=private-token\nPOWERCONTEXT_SERVER_ACCESS_MODE=enforced\n"
     )
-    monkeypatch.setenv("POWERCONTEXT_SERVER_HTTP_PORT", "18321")
+    monkeypatch.setenv(port_name, "18321")
     monkeypatch.setenv("POWERCONTEXT_HOME", str(tmp_path / "data"))
 
     result = CliRunner().invoke(config_app, ["show", "--json"])
@@ -89,6 +88,19 @@ def test_config_report_explains_effective_values_without_exposing_secrets(tmp_pa
     assert report["configuration_file"] == str(path)
     assert report["settings"]["POWERCONTEXT_SERVER_HTTP_PORT"] == {"value": "18321", "source": "environment"}
     assert report["settings"]["POWERCONTEXT_SERVER_DATABASE_URL"]["value"].endswith("/data/powercontext.db")
+
+
+def test_config_report_identifies_an_empty_configuration_file():
+    path = default_server_env_file()
+    path.parent.mkdir(parents=True)
+    path.touch()
+
+    result = CliRunner().invoke(config_app, ["show", "--json"])
+
+    assert result.exit_code == 0, result.output
+    report = json.loads(result.output)
+    assert report["configuration_file"] == str(path)
+    assert report["settings"]["POWERCONTEXT_SERVER_HTTP_PORT"] == {"value": "17429", "source": "default"}
 
 
 @pytest.mark.parametrize("xdg", ["custom", "relative", "missing"])

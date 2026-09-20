@@ -7,6 +7,9 @@ description: 通过显式环境文件生成、检查、校验并运行 PowerCont
 
 当 Server 需要推理、调度、存储或部署设置时，使用显式环境文件。
 
+个人服务可直接运行 `powercontext config init`，将配置保存到用户配置目录。下面的显式 `.env` 流程适用于
+需要独立配置的项目或部署；启动时显式指定该文件，避免已有用户配置改变文件选择。
+
 ## 1. 生成文件
 
 ```bash
@@ -59,10 +62,10 @@ powercontext config validate --env-file .env
 ## 3. 使用同一份配置启动
 
 ```bash
-powercontext server run
+powercontext server run --env-file .env
 ```
 
-`server run` 会发现当前目录的 `.env`。使用 `--env-file <path>` 可选择其他文件，使用 `--no-env-file` 可禁用文件加载。
+`server run` 优先加载用户配置目录的 `server.env`，不存在时才读取当前目录的 `.env`。使用 `--env-file <path>` 可选择其他文件，使用 `--no-env-file` 可禁用文件加载。
 配置优先级依次为 CLI 参数、进程环境变量、所选文件和默认值。命令会显示实际加载文件的绝对路径，但不会输出凭据。
 
 保持 Server 运行，在另一个终端回到配置目录，加载向导生成的客户端配置后再检查：

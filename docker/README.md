@@ -16,7 +16,7 @@ Run the Server with persistent SQLite and scheduler data:
 ```bash
 docker run --rm \
   --name powercontext-server \
-  --publish 127.0.0.1:8000:8000 \
+  --publish 127.0.0.1:17429:8000 \
   --volume powercontext-data:/data \
   powercontext-server:local
 ```

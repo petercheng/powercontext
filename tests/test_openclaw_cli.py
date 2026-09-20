@@ -243,7 +243,7 @@ def test_setup_openclaw_defaults_to_the_server_default_endpoint(monkeypatch: pyt
     result = CliRunner().invoke(create_cli([setup_app]), ["setup", "openclaw", "--json"])
 
     assert result.exit_code == 0
-    assert json.loads(result.output)["server_url"] == "http://127.0.0.1:8000"
+    assert json.loads(result.output)["server_url"] == "http://127.0.0.1:17429"
 
 
 _OPENCLAW_PLUGIN_LIST_COMMAND = ["openclaw", "plugins", "list", "--enabled", "--json"]

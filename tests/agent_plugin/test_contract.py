@@ -54,7 +54,7 @@ def test_agent_plugin_mcp_configuration_is_portable_and_secret_free() -> None:
         "mcpServers": {
             "powercontext": {
                 "type": "streamable-http",
-                "url": "http://127.0.0.1:8000/mcp",
+                "url": "http://127.0.0.1:17429/mcp",
             }
         },
     }
@@ -68,7 +68,7 @@ def test_agent_plugin_readme_documents_server_and_auth_boundaries() -> None:
 
     assert "git clone https://github.com/oceanbase/powercontext.git" in content
     assert "uv run powercontext server run" in content
-    assert "http://127.0.0.1:8000/mcp" in content
+    assert "http://127.0.0.1:17429/mcp" in content
     assert "chat.pluginLocations" in content
     assert "static credentials" in content
     assert "does not embed" in content

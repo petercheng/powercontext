@@ -24,7 +24,7 @@ describe('resolveConfig', () => {
 
   it('uses bounded fail-open defaults', () => {
     const config = resolveConfig({})
-    expect(config.baseUrl).toBe('http://127.0.0.1:8000')
+    expect(config.baseUrl).toBe('http://127.0.0.1:17429')
     expect(config.capturePrompts).toBe(true)
     expect(config.maxBytes).toBe(8000)
   })

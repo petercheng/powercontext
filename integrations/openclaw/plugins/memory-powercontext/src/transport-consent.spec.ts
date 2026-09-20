@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { resolvePowerContextConfig } from './config.js'
 
@@ -149,4 +149,16 @@ describe('openclaw transport consent', () => {
     expect(() => resolve({}, { allowInsecureHttp: false })).toThrow(/HTTPS/)
     expect(() => resolve({}, { endpoint: 'http://other.test' })).toThrow(/HTTPS/)
   })
+})
+
+it.skipIf(process.platform !== 'linux')('prefers XDG settings while preserving legacy connections', () => {
+  const env = { HOME: directory, XDG_CONFIG_HOME: join(directory, 'config'), POWERCONTEXT_CLIENT_CONFIG_FILE: undefined }
+  configFile = join(directory, '.config', 'powercontext', 'clients.json')
+  mkdirSync(dirname(configFile), { recursive: true })
+  save('http://127.0.0.1:8000', false)
+  expect(resolve(env).baseUrl).toBe('http://127.0.0.1:8000')
+  configFile = join(directory, 'config', 'powercontext', 'clients.json')
+  mkdirSync(dirname(configFile), { recursive: true })
+  save('http://127.0.0.1:18321', false)
+  expect(resolve(env).baseUrl).toBe('http://127.0.0.1:18321')
 })

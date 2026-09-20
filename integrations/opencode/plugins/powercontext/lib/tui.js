@@ -15,9 +15,9 @@
  */
 import { createElement, insert, setProp } from "@opentui/solid";
 import { createSignal, onCleanup } from "solid-js";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
 //#region src/errors.ts
@@ -1313,7 +1313,10 @@ function environmentBoolean(env, name) {
 function readSavedClient(host, env) {
 	const home = optionalText(env.HOME) ?? homedir();
 	const configuredPath = optionalText(env.POWERCONTEXT_CLIENT_CONFIG_FILE);
-	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? join(home, ".config", "powercontext", "clients.json");
+	const xdgConfig = optionalText(env.XDG_CONFIG_HOME);
+	const preferred = join(process.platform === "win32" ? optionalText(env.LOCALAPPDATA) ?? join(home, "AppData", "Local") : process.platform === "darwin" ? join(home, "Library", "Application Support") : xdgConfig && isAbsolute(xdgConfig) ? xdgConfig : join(home, ".config"), "powercontext", "clients.json");
+	const legacy = join(home, ".config", "powercontext", "clients.json");
+	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? (!existsSync(preferred) && existsSync(legacy) ? legacy : preferred);
 	let contents;
 	try {
 		contents = readFileSync(path, "utf8");
@@ -1791,7 +1794,7 @@ async function handlePcCommand(rawInput, runtime, scopeId, signal) {
 //#endregion
 //#region src/config.ts
 const DEFAULTS = {
-	baseUrl: "http://127.0.0.1:8000",
+	baseUrl: "http://127.0.0.1:17429",
 	allowInsecureHttp: false,
 	scopeId: void 0,
 	authorization: void 0,

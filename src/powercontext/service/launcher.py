@@ -74,8 +74,14 @@ def main(arguments: list[str] | None = None) -> int:
                 environment = load_protected_environment_file(options.env_file, expected=identity).values
             # A package upgrade must not change a registered listener's defaults.
             registered = urlsplit(options.endpoint)
-            environment.setdefault("POWERCONTEXT_SERVER_HTTP_HOST", registered.hostname or "127.0.0.1")
-            environment.setdefault("POWERCONTEXT_SERVER_HTTP_PORT", str(registered.port))
+            defaults = {
+                "POWERCONTEXT_SERVER_HTTP_HOST": registered.hostname or "127.0.0.1",
+                "POWERCONTEXT_SERVER_HTTP_PORT": str(registered.port),
+            }
+            configured_names = {name.casefold() for name in environment}
+            environment.update({
+                name: value for name, value in defaults.items() if name.casefold() not in configured_names
+            })
             with server_settings_context(environment=environment, data_dir=options.data_dir) as settings:
                 expected = _endpoint(settings.http.host, settings.http.port)
                 if expected != options.endpoint or not is_loopback_host(settings.http.host):

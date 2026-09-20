@@ -1698,15 +1698,20 @@ def test_service_upgrade_preserves_registered_endpoint_and_data(tmp_path: Path) 
     assert adapter.definition.data_dir == previous.data_dir
 
 
-def test_service_install_uses_persistent_user_configuration(tmp_path: Path) -> None:
+@pytest.mark.parametrize("port_name", ["POWERCONTEXT_SERVER_HTTP_PORT", "powercontext_server_http_port"])
+@pytest.mark.parametrize("existing", [False, True])
+def test_service_install_uses_persistent_user_configuration(tmp_path: Path, port_name: str, existing: bool) -> None:
     from powercontext.paths import default_server_env_file
 
     environment = default_server_env_file()
     environment.parent.mkdir(parents=True)
-    environment.write_text("POWERCONTEXT_SERVER_HTTP_PORT=18321\n", encoding="utf-8")
+    environment.write_text(f"{port_name}=18321\n", encoding="utf-8")
     environment.chmod(0o600)
     _secure_windows_file(environment)
     adapter = FakeAdapter(tmp_path)
+    if existing:
+        previous = _definition(tmp_path, env_file=load_protected_environment_file(environment).identity)
+        adapter.write(adapter.render(previous))
 
     status = ServiceController(adapter, probe=_manager_probe(adapter), sleep=lambda _: None).install()
 

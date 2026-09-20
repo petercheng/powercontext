@@ -122,9 +122,9 @@ describe('PowerContextPlugin', () => {
     expect(incoming.parts[1]).toMatchObject({ synthetic: true, messageID: 'msg-1', sessionID: 'session-1' })
     expect(incoming.parts[1]?.text).toContain('Parser decision')
     expect(calls.map((call) => call.url)).toEqual([
-      'http://127.0.0.1:8000/v1/scope-bindings/resolve',
-      'http://127.0.0.1:8000/v1/context/prepare',
-      'http://127.0.0.1:8000/v1/sources/content',
+      'http://127.0.0.1:17429/v1/scope-bindings/resolve',
+      'http://127.0.0.1:17429/v1/context/prepare',
+      'http://127.0.0.1:17429/v1/sources/content',
     ])
     expect(calls[2]?.body.source_id).toMatch(/^opencode-user-prompt:/)
     expect(calls[2]?.body.metadata.origin).toBe('opencode')

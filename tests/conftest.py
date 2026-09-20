@@ -14,6 +14,7 @@
 
 """Repository-wide pytest collection controls."""
 
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -38,6 +39,9 @@ def isolated_client_connection_settings(tmp_path, monkeypatch, request):
 
     if not request.config.getoption("run_real_e2e"):
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
+        monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local-app-data"))
+        if sys.platform == "darwin":
+            monkeypatch.setenv("HOME", str(tmp_path / "home"))
         monkeypatch.setenv("POWERCONTEXT_CLIENT_CONFIG_FILE", str(tmp_path / "client-settings.json"))
         monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
 
