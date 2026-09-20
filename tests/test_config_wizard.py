@@ -203,7 +203,7 @@ def test_openclaw_next_steps_use_plugin_configuration_contract(tmp_path: Path) -
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\ny\nopenclaw\nnew\nnone\ny\n",
+        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\ny\n\nopenclaw\nnew\nnone\ny\n",
     )
 
     assert result.exit_code == 0, result.output
@@ -221,15 +221,17 @@ def test_openclaw_next_steps_use_plugin_configuration_contract(tmp_path: Path) -
 def test_base_wizard_writes_private_environment_without_models(tmp_path: Path) -> None:
     output = tmp_path / "server.env"
     database = tmp_path / "context.db"
-    # Storage, path, local scene, base capability, no dashboard, no Agent, save.
+    # Storage, path, local scene, base capability, no dashboard, custom port, no Agent, save.
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=f"sqlite\n{database}\nlocal\nbase\nn\nnone\ny\ny\n",
+        input=f"sqlite\n{database}\nlocal\nbase\nn\n18321\nnone\ny\ny\n",
     )
     assert result.exit_code == 0, result.output
     values = parse_environment(output.read_text())
     assert values["POWERCONTEXT_SERVER_DATABASE_KIND"] == "sqlite"
+    assert values["POWERCONTEXT_SERVER_HTTP_PORT"] == "18321"
+    assert values["POWERCONTEXT_CLIENT_SERVER_URL"] == "http://127.0.0.1:18321"
     assert values["POWERCONTEXT_SERVER_DASHBOARD_ENABLED"] == "false"
     assert "POWERCONTEXT_SERVER_INFERENCE_GENERATION_MODEL" not in values
     assert "API key" not in result.output
@@ -244,7 +246,7 @@ def test_cancel_in_chinese_does_not_write_files(tmp_path: Path) -> None:
     result = CliRunner().invoke(
         app,
         ["init", "--language", "zh", "--output", str(output)],
-        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\nnone\ny\nn\n",
+        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\n\nnone\ny\nn\n",
     )
     assert result.exit_code == 0, result.output
     assert "配置向导" in result.output
@@ -328,7 +330,7 @@ def test_seekdb_install_runs_behind_prompts_and_finishes_after_save(tmp_path: Pa
     result = CliRunner().invoke(
         app,
         ["init", "--language", "zh", "--output", str(output)],
-        input=f"seekdb\n{tmp_path / 'seekdb'}\ny\nlocal\nbase\nn\nnone\ny\ny\n",
+        input=f"seekdb\n{tmp_path / 'seekdb'}\ny\nlocal\nbase\nn\n\nnone\ny\ny\n",
     )
 
     assert result.exit_code == 0, result.output
@@ -368,7 +370,7 @@ def test_seekdb_install_failure_prints_one_manual_command(tmp_path: Path, monkey
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=f"seekdb\n{tmp_path / 'seekdb'}\ny\nlocal\nbase\nn\nnone\ny\ny\n",
+        input=f"seekdb\n{tmp_path / 'seekdb'}\ny\nlocal\nbase\nn\n\nnone\ny\ny\n",
     )
 
     assert result.exit_code == 0, result.output
@@ -381,7 +383,7 @@ def test_dashboard_finish_shows_new_token_once_and_clear_old_bindings(tmp_path: 
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\ny\ncodex\ndefault\nclaude-code\ndefault\nnone\ny\n",
+        input=f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\ny\n\ncodex\ndefault\nclaude-code\ndefault\nnone\ny\n",
     )
     assert result.exit_code == 0, result.output
     server_values = parse_environment(output.read_text())
@@ -409,7 +411,7 @@ def test_full_memory_configuration_shares_provider_and_adds_profile_recall(tmp_p
         app,
         ["init", "--language", "en", "--output", str(output)],
         input=(
-            f"sqlite\n{tmp_path / 'context.db'}\nlocal\nfull\nn\n"
+            f"sqlite\n{tmp_path / 'context.db'}\nlocal\nfull\nn\n\n"
             "bailian\n\n\nexample-test-key\ny\n\nrecommended\ncodex\nexisting\nproject:demo\nnone\ny\n"
         ),
     )
@@ -448,7 +450,7 @@ def test_custom_topic_memory_does_not_require_embedding(tmp_path: Path) -> None:
         ["init", "--language", "en", "--output", str(output)],
         input=(
             f"sqlite\n{tmp_path / 'context.db'}\nlocal\ncustom\n"
-            "n\ny\nn\nn\nn\nn\nn\nn\nbailian\n\n\nexample-test-key\nrecommended\nnone\ny\ny\n"
+            "n\ny\nn\nn\nn\nn\nn\nn\n\nbailian\n\n\nexample-test-key\nrecommended\nnone\ny\ny\n"
         ),
     )
     assert result.exit_code == 0, result.output
@@ -478,17 +480,19 @@ def test_ssh_forwarding_configures_the_agent_on_the_other_computer(tmp_path: Pat
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=(f"sqlite\n{tmp_path / 'context.db'}\nremote\nbase\ny\nssh\nt1\n18000\ncodex\nother\n\nnew\nnone\ny\n"),
+        input=(
+            f"sqlite\n{tmp_path / 'context.db'}\nremote\nbase\ny\nssh\n18321\nt1\n18000\ncodex\nother\n\nnew\nnone\ny\n"
+        ),
     )
     assert result.exit_code == 0, result.output
     values = parse_environment(output.read_text())
-    assert values["POWERCONTEXT_SERVER_HTTP_PORT"] == "17429"
+    assert values["POWERCONTEXT_SERVER_HTTP_PORT"] == "18321"
     client = parse_environment(output.read_text())
     assert "POWERCONTEXT_CODEX_SERVER_URL" not in client
     assert client["POWERCONTEXT_CLIENT_SERVER_URL"] == "http://127.0.0.1:18000"
     steps = output.with_name("server.env.next-steps.md").read_text()
     assert '"url": "http://127.0.0.1:18000/mcp"' in steps
-    tunnel = "ssh -N -L 18000:127.0.0.1:17429 t1"
+    tunnel = "ssh -N -L 18000:127.0.0.1:18321 t1"
     assert tunnel in steps
     saved_summary = result.output.split("Connection details", maxsplit=1)[1]
     assert tunnel in saved_summary
@@ -610,7 +614,7 @@ def test_processing_choice_says_selected_automatic_capabilities_are_already_enab
         ["init", "--language", "zh", "--output", str(output)],
         input=(
             f"sqlite\n{tmp_path / 'context.db'}\nlocal\ncustom\n"
-            "n\ny\nn\nn\nn\nn\nn\nn\nbailian\n\n\nkey\nrecommended\nnone\ny\nn\n"
+            "n\ny\nn\nn\nn\nn\nn\nn\n\nbailian\n\n\nkey\nrecommended\nnone\ny\nn\n"
         ),
     )
     assert result.exit_code == 0, result.output
@@ -626,7 +630,7 @@ def test_agents_are_selected_one_at_a_time_and_get_independent_scope_plans(tmp_p
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=(f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\ncodex\nnew\nclaude-code\nnew\nnone\ny\n"),
+        input=(f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\n\ncodex\nnew\nclaude-code\nnew\nnone\ny\n"),
     )
     assert result.exit_code == 0, result.output
     assert result.output.count("Select an Agent to configure") == 3
@@ -646,7 +650,7 @@ def test_existing_scope_is_requested_separately_for_each_agent(tmp_path: Path) -
         app,
         ["init", "--language", "en", "--output", str(output)],
         input=(
-            f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\n"
+            f"sqlite\n{tmp_path / 'context.db'}\nlocal\nbase\nn\n\n"
             "codex\nexisting\nSCOPE_CODEX\nclaude-code\nexisting\nSCOPE_CLAUDE\nnone\ny\n"
         ),
     )

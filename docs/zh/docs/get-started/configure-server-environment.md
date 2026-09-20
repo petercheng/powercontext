@@ -24,6 +24,14 @@ powercontext config init --output .env
 基础记忆通过 Agent 显式保存和全文召回，不要求独立模型 API；自动处理和语义检索分别需要对应的模型配置。
 已有环境文件可以直接沿用，也可以按模块调整。
 
+本地场景的“Dashboard 与访问”始终询问“Server 端口”。回车保留现有值，首次配置默认 `17429`；可输入 `1–65535` 范围内
+的整数，例如 `18000`。Dashboard、HTTP API 和 MCP 共用这个监听端口。启用 Dashboard 后，本机浏览器地址为
+`http://127.0.0.1:18000/dashboard/home`。
+
+修改已有端口时，再次执行同一条 `config init` 命令，沿用存储设置，选择“只修改指定模块”，进入“Dashboard 与访问”并选择
+本地场景。输入端口后，选择“查看并保存”并确认即可；也可以更换自定义端口或恢复为 `8000`。文件中仍指向原本地端口的
+客户端 URL 会同步更新，显式远程或代理地址保持不变。SSH 场景分别询问 Server 端口和客户端电脑上的转发端口。
+
 配置 Agent 时每次选择一个 Agent；完成后可以继续添加，已配置项不会再次出现。每个 Agent 可分别使用默认 Scope、绑定已有
 Scope，或计划创建独立 Scope。独立 Scope 使用 `codex-<随机串>`、`claude-code-<随机串>` 形式的标题，但真正的
 `scope_id` 必须使用 Server 创建后返回的不透明 ID，向导不会把标题冒充为 ID。
@@ -67,6 +75,11 @@ powercontext server run --env-file .env
 
 `server run` 优先加载用户配置目录的 `server.env`，不存在时才读取当前目录的 `.env`。使用 `--env-file <path>` 可选择其他文件，使用 `--no-env-file` 可禁用文件加载。
 配置优先级依次为 CLI 参数、进程环境变量、所选文件和默认值。命令会显示实际加载文件的绝对路径，但不会输出凭据。
+
+Server 已在运行时，需要停止后使用保存的文件重新启动，新端口才会生效；向导不会重启进程。已注册的个人服务则执行
+`powercontext service install --env-file .env`，刷新已记录的配置并重启。已安装 Agent 的独立连接配置需通过
+`powercontext setup <host> --configure-only --server-url http://127.0.0.1:18000` 更新，再重新加载宿主；详见
+[服务地址改变后修复客户端连接](../operate/troubleshoot.md#服务地址改变后修复客户端连接)。
 
 保持 Server 运行，在另一个终端回到配置目录，加载向导生成的客户端配置后再检查：
 

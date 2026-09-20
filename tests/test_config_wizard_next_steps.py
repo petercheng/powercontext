@@ -43,7 +43,7 @@ def test_mixed_ssh_agents_keep_their_endpoints_and_codex_client_checks(tmp_path,
     result = CliRunner().invoke(
         app,
         ["init", "--language", "en", "--output", str(output)],
-        input=f"sqlite\n{tmp_path / 'context.db'}\nremote\nbase\ny\nssh\nt1\n18000\n{agents}none\ny\n",
+        input=f"sqlite\n{tmp_path / 'context.db'}\nremote\nbase\ny\nssh\n\nt1\n18000\n{agents}none\ny\n",
     )
 
     assert result.exit_code == 0, result.output

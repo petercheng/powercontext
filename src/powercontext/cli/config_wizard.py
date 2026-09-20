@@ -435,18 +435,18 @@ def _server_url(ui: WizardUI, default: str) -> str:
             )
 
 
-def _stored_network_port(state: Wizard) -> tuple[int, bool]:
+def _stored_network_port(state: Wizard) -> int:
     try:
         port = int(state.values.get(f"{SERVER}HTTP_PORT", str(DEFAULT_SERVER_PORT)))
     except ValueError:
         port = 0
     if 1 <= port <= 65535:
-        return port, False
+        return port
     state.ui.say(
         "The existing Server port is invalid. Using 17429 as the editable default.",
         "已有 Server 端口无效，将以 17429 作为可修改的默认值。",
     )
-    return DEFAULT_SERVER_PORT, True
+    return DEFAULT_SERVER_PORT
 
 
 def _custom_access(state: Wizard, port: int) -> tuple[str, int, str]:
@@ -516,15 +516,19 @@ def _ssh_forwarding_access(state: Wizard, port: int, dashboard: bool) -> tuple[s
 def _network(state: Wizard) -> None:
     ui = state.ui
     ui.section("4. Dashboard and access", "4. Dashboard 与访问")
+    ui.say(
+        "The Dashboard, HTTP API, and MCP share the same Server listener and port.",
+        "Dashboard、HTTP API 和 MCP 共用同一个 Server 监听地址与端口。",
+    )
     dashboard = ui.confirm(
         "Enable the browser Dashboard? This also enables authenticated access and creates or retains a Server token.",
         "开启浏览器 Dashboard？这会同时启用访问认证，并生成或沿用 Server Token。",
         default=state.values.get(f"{SERVER}DASHBOARD_ENABLED", "true") == "true",
     )
-    port, invalid_port = _stored_network_port(state)
+    previous_port = port = _stored_network_port(state)
     state.forwarded_address = ""
     state.ssh_tunnel_command = ""
-    if state.scenario == "local" and (invalid_port or port != DEFAULT_SERVER_PORT):
+    if state.scenario == "local":
         port = ui.integer("Server port", "Server 端口", default=port, maximum=65535)
     host = "127.0.0.1"
     address = f"http://127.0.0.1:{port}"
@@ -548,9 +552,7 @@ def _network(state: Wizard) -> None:
             default="custom",
         )
         if access == "ssh":
-            if invalid_port:
-                port = ui.integer("Server port", "Server 端口", default=port, maximum=65535)
-                address = f"http://127.0.0.1:{port}"
+            port = ui.integer("Server port", "Server 端口", default=port, maximum=65535)
             host, port, address = _ssh_forwarding_access(state, port, dashboard)
         elif access == "https":
             host, port, address = _reverse_proxy_access(state, port)
@@ -579,6 +581,7 @@ def _network(state: Wizard) -> None:
     }
     if authenticated:
         updates[f"{SERVER}AUTH_TOKEN"] = token
+    updates.update(_network_client_updates(state, previous_port=previous_port, port=port, address=address, token=token))
     state.patch(updates)
     state.client = {f"{CLIENT}SERVER_URL": address}
     if token:
@@ -589,6 +592,27 @@ def _network(state: Wizard) -> None:
             f"Dashboard: {dashboard_address}/dashboard/home",
             f"Dashboard：{dashboard_address}/dashboard/home",
         )
+
+
+def _network_client_updates(
+    state: Wizard, *, previous_port: int, port: int, address: str, token: str
+) -> dict[str, str]:
+    """Align generated local connections while preserving explicit remote URLs."""
+
+    updates = {}
+    if state.scenario == "local" and port != previous_port:
+        old_addresses = {f"http://{loopback}:{previous_port}" for loopback in ("127.0.0.1", "localhost", "[::1]")}
+        client_names = {f"{CLIENT}SERVER_URL"} | {
+            name for agent in AGENT_SPECS if (name := agent.environment_name(agent.server_setting)) is not None
+        }
+        updates.update({
+            name: address for name in client_names if state.values.get(name, "").rstrip("/") in old_addresses
+        })
+    if f"{CLIENT}SERVER_URL" not in state.values:
+        updates[f"{CLIENT}SERVER_URL"] = address
+    if updates.get(f"{CLIENT}SERVER_URL") == address and token:
+        updates[f"{CLIENT}API_TOKEN"] = token
+    return updates
 
 
 def _infer_features(state: Wizard) -> None:
@@ -1148,6 +1172,11 @@ def _show_connection_details(state: Wizard, output: Path, values: dict[str, str]
     if not state.client_only:
         command = f"powercontext server run --env-file {shlex.quote(str(output))}"
         ui.say(f"Start Server: {command}", f"启动 Server：{command}")
+        ui.say(
+            "If Server is already running, restart it with the saved configuration to apply changes. "
+            "This wizard does not restart it.",
+            "如果 Server 已在运行，请使用保存的配置重启，修改才会生效。本向导不会重启服务。",
+        )
     if state.ssh_tunnel_command:
         ui.say(
             f"Run on the client computer: {state.ssh_tunnel_command}",
@@ -1201,6 +1230,15 @@ def _next_steps(state: Wizard, output: Path, client_file: Path) -> str:
     ]
     if not state.client_only:
         lines += [
+            ui.text(
+                "If Server is already running, stop it and start it with this file to apply changes. "
+                "For a registered personal service, run "
+                f"`powercontext service install --env-file {shlex.quote(str(output))}` "
+                "to refresh its configuration and restart it instead.",
+                "如果 Server 已在运行，请停止后使用此文件重新启动，修改才会生效。已注册的个人服务则执行 "
+                f"`powercontext service install --env-file {shlex.quote(str(output))}` 刷新配置并重启。",
+            ),
+            "",
             "```bash",
             f"powercontext config validate --env-file {shlex.quote(str(output))}",
             f"powercontext server run --env-file {shlex.quote(str(output))}",

@@ -118,21 +118,10 @@ def test_custom_access_asks_for_listener_and_client_url() -> None:
     assert state.client[CLIENT + "SERVER_URL"] == "https://memory.example.com"
 
 
-def test_default_local_port_keeps_the_short_flow() -> None:
-    state = Wizard(WizardUI("en"), {}, {})
-
-    result = _run_network(state, "n\n")
-
-    assert result.exit_code == 0, result.output
-    assert "Server port" not in result.output
-    assert state.values[SERVER + "HTTP_PORT"] == "17429"
-    assert state.forwarded_address == ""
-
-
 def test_dashboard_question_explains_authentication_and_keeps_mcp_enabled() -> None:
     state = Wizard(WizardUI("en"), {}, {})
 
-    result = _run_network(state, "n\n")
+    result = _run_network(state, "n\n\n")
 
     assert result.exit_code == 0, result.output
     assert "authenticated access" in result.output
@@ -144,7 +133,7 @@ def test_dashboard_question_explains_authentication_and_keeps_mcp_enabled() -> N
 def test_ssh_preserves_server_address_and_exposes_forwarded_client_address() -> None:
     state = Wizard(WizardUI("en"), {}, {}, scenario="remote")
 
-    result = _run_network(state, "y\nssh\nt1\n18000\n")
+    result = _run_network(state, "y\nssh\n\nt1\n18000\n")
 
     assert result.exit_code == 0, result.output
     assert state.values[SERVER + "HTTP_HOST"] == "127.0.0.1"
@@ -157,10 +146,10 @@ def test_ssh_preserves_server_address_and_exposes_forwarded_client_address() -> 
 
 def test_switching_from_ssh_to_local_clears_the_old_forwarded_address() -> None:
     state = Wizard(WizardUI("en"), {}, {}, scenario="remote")
-    assert _run_network(state, "n\nssh\nt1\n18000\n").exit_code == 0
+    assert _run_network(state, "n\nssh\n\nt1\n18000\n").exit_code == 0
     state.scenario = "local"
 
-    result = _run_network(state, "n\n")
+    result = _run_network(state, "n\n\n")
 
     assert result.exit_code == 0, result.output
     assert state.forwarded_address == ""

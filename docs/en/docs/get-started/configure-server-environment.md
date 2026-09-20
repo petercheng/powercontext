@@ -24,6 +24,17 @@ then asks about Dashboard and access settings and only the model connections nee
 memory uses explicit Agent-saved memories and full-text recall without a separate model API; automatic processing
 and semantic retrieval require their respective model settings. Existing files can be reused or adjusted by module.
 
+For local use, **Dashboard and access** always asks for the **Server port**. Press Enter to keep the existing value;
+a fresh configuration defaults to `17429`. Enter an integer from `1` to `65535`, such as `18000`. The Dashboard,
+HTTP API, and MCP share this listener and port. With the Dashboard enabled, the local browser address is
+`http://127.0.0.1:18000/dashboard/home`.
+
+To change an existing port, rerun the same `config init` command, keep the storage settings, choose **Edit selected
+modules**, then **Dashboard and access** and local use. Enter the port, choose **Review and save**, and confirm.
+This also supports changing custom ports or restoring `8000`. Local client URLs in the file that still point to the
+old port follow the change; explicit remote or proxy URLs remain unchanged. SSH setup asks separately for the Server
+port and the forwarded port on the client computer.
+
 Agent configuration selects one Agent at a time and can then add another; configured choices are removed from the
 menu. Each Agent can independently use the default Scope, bind an existing Scope, or plan a new isolated Scope.
 Planned titles use `codex-<random>` or `claude-code-<random>`, but the real `scope_id` is the opaque value returned
@@ -73,6 +84,12 @@ powercontext server run --env-file .env
 `server run` prefers the user `server.env`, falling back to a working-directory `.env`. The explicit option above selects the same file you generated. Use `--env-file <path>` to select a different file or
 `--no-env-file` to disable file loading. CLI options take precedence, followed by process environment variables, the
 selected file, and defaults. The command prints the resolved file path without printing credentials.
+
+If Server is already running, stop it and restart it with the saved file for the new port to take effect. The wizard
+does not restart processes. For a registered personal service, use `powercontext service install --env-file .env`
+instead to refresh its recorded configuration and restart it. Update installed Agent connections separately with
+`powercontext setup <host> --configure-only --server-url http://127.0.0.1:18000`, then reload the host; see
+[Reconnect after an endpoint change](../operate/troubleshoot.md#reconnect-after-an-endpoint-change).
 
 Keep the Server running. In another terminal, return to the configuration directory and load the generated client
 configuration before checking the service:
