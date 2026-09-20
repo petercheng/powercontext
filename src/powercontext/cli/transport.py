@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -148,7 +149,9 @@ def existing_native_endpoint(host: str) -> str | None:
     return None
 
 
-def save_setup_transport(settings: SetupTransport) -> None:
+def save_setup_transport(
+    settings: SetupTransport, *, native_updates: Sequence[tuple[Path, dict[str, Any]]] = ()
+) -> None:
     """Save endpoint-bound consent, rolling back paired native writes on failure."""
 
     from powercontext.cli.system import SetupError, _write_bytes_atomically
@@ -163,7 +166,7 @@ def save_setup_transport(settings: SetupTransport) -> None:
             "server_url": settings.server_url,
             "allow_insecure_http": settings.allow_insecure_http,
         }
-        updates: list[tuple[Path, dict[str, Any]]] = []
+        updates = list(native_updates)
         if settings.host == "hermes":
             native_path = hermes_config_file()
             native = json.loads(native_path.read_text(encoding="utf-8")) if native_path.exists() else {}

@@ -151,3 +151,11 @@ def test_codex_desktop_authorization_is_windows_only(monkeypatch: pytest.MonkeyP
 
     assert configure_codex_desktop_authorization("saved-token") is False
     assert read_codex_desktop_authorization() is None
+
+
+def test_incomplete_credential_file_is_reported_as_invalid(tmp_path: Path) -> None:
+    path = tmp_path / "credentials.json"
+    path.write_text('{"version": 1, "authorization": "Bearer secret-token"}')
+    path.chmod(0o600)
+
+    assert read_stored_authorization(path, server_url="https://one.example") == AuthorizationResolution("invalid", None)

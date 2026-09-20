@@ -322,11 +322,9 @@ def init_command(
 @app.command("show")
 def show_command(
     env_file: Annotated[Path | None, typer.Option(help="Environment file to inspect.")] = None,
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Show effective settings and their sources as JSON.")
-    ] = False,
+    json_output: Annotated[bool, typer.Option("--json", help="Show redacted file assignments as JSON.")] = False,
 ) -> None:
-    """Print effective assignments with credentials redacted."""
+    """Print file assignments with credentials redacted."""
 
     explicit_file = env_file is not None
     env_file = _configuration_file(env_file)
@@ -338,21 +336,15 @@ def show_command(
     except (ConfigError, EnvironmentFileError, OSError, UnicodeError) as error:
         _fail(str(error))
     recorded_credentials = {name for name in recorded.split(",") if name}
+    values = {
+        name: "<redacted>" if _is_secret_name(name) or name in recorded_credentials else value
+        for name, value in sorted(values.items())
+    }
     if json_output:
-        try:
-            report = _configuration_report(env_file if exists else None, values, recorded_credentials)
-        except ModuleNotFoundError:
-            _fail(
-                "Effective Server settings require powercontext[server]; "
-                "use config show without --json to inspect file assignments."
-            )
-        except ValueError as error:
-            _fail(str(error))
-        typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps({"configuration_file": str(env_file), "settings": values}, indent=2, ensure_ascii=False))
         return
-    typer.echo(f"Configuration file: {env_file} ({'loaded' if exists else 'not found; using defaults/environment'})")
-    for name in sorted(values):
-        value = _redacted_value(name, values[name], recorded_credentials)
+    typer.echo(f"Configuration file: {env_file} ({'loaded' if exists else 'not found'})")
+    for name, value in values.items():
         typer.echo(f"{name}={value}")
 
 
@@ -378,75 +370,6 @@ def validate_command(
 
 def _configuration_file(path: Path | None) -> Path:
     return resolve_server_environment_file(path, discover=True) or default_server_env_file()
-
-
-def _redacted_value(name: str, value: str, credentials: set[str]) -> str:
-    if (
-        name == "POWERCONTEXT_SERVER_DATABASE_URL"
-        and value.startswith(("sqlite:///", "sqlite+aiosqlite:///"))
-        and "?" not in value
-        and name not in credentials
-    ):
-        return value
-    if _is_secret_name(name) or name in credentials:
-        return "<redacted>"
-    if "://" in value:
-        try:
-            parsed = urlsplit(value)
-            if parsed.username is not None or parsed.password is not None or parsed.query:
-                return "<redacted>"
-        except ValueError:
-            return "<redacted>"
-    return value
-
-
-def _canonical_server_name(name: str) -> str:
-    return name.upper() if name.upper().startswith("POWERCONTEXT_SERVER_") else name
-
-
-def _configuration_report(env_file: Path | None, values: dict[str, str], credentials: set[str]) -> dict[str, object]:
-    from powercontext.client.transport_policy import client_config_file, resolve_client_transport
-    from powercontext.paths import powercontext_data_dir
-    from powercontext.server.configuration import server_settings_context
-
-    values = {_canonical_server_name(name): value for name, value in values.items()}
-    credentials = {_canonical_server_name(name) for name in credentials}
-    with server_settings_context(env_file=env_file, process_environment_overrides=True) as settings:
-        effective = {
-            "POWERCONTEXT_SERVER_HTTP_HOST": settings.http.host,
-            "POWERCONTEXT_SERVER_HTTP_PORT": str(settings.http.port),
-            "POWERCONTEXT_SERVER_MCP_PATH": settings.mcp.path,
-            "POWERCONTEXT_SERVER_DATABASE_KIND": settings.database.kind,
-            "POWERCONTEXT_HOME": str(powercontext_data_dir()),
-        }
-        database = settings.database
-        if database.kind == "sqlite":
-            effective["POWERCONTEXT_SERVER_DATABASE_URL"] = database.url
-        elif database.kind == "seekdb":
-            effective["POWERCONTEXT_SERVER_DATABASE_PATH"] = str(database.path)
-        else:
-            effective["POWERCONTEXT_SERVER_DATABASE_URL"] = "<redacted>"
-    process_environment = {_canonical_server_name(name): value for name, value in os.environ.items()}
-    environment = {
-        name: value
-        for name, value in process_environment.items()
-        if name in values or name in effective or name.startswith("POWERCONTEXT_SERVER_")
-    }
-    assignments = {**values, **environment, **effective}
-    sources = {
-        name: {
-            "value": _redacted_value(name, value, credentials),
-            "source": "environment" if name in environment else "file" if name in values else "default",
-        }
-        for name, value in sorted(assignments.items())
-    }
-    endpoint, _allowed = resolve_client_transport("client")
-    return {
-        "configuration_file": str(env_file) if env_file is not None else None,
-        "client_configuration_file": str(client_config_file()),
-        "client_server_url": endpoint,
-        "settings": sources,
-    }
 
 
 def _print_summary(configuration: GeneratedConfiguration) -> None:

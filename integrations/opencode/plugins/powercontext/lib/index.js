@@ -16,9 +16,9 @@
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { tool } from "@opencode-ai/plugin";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 //#region src/errors.ts
 const REQUEST_ID_HEADER = "X-PowerContext-Request-ID";
@@ -1313,10 +1313,7 @@ function environmentBoolean(env, name) {
 function readSavedClient(host, env) {
 	const home = optionalText(env.HOME) ?? homedir();
 	const configuredPath = optionalText(env.POWERCONTEXT_CLIENT_CONFIG_FILE);
-	const xdgConfig = optionalText(env.XDG_CONFIG_HOME);
-	const preferred = join(process.platform === "win32" ? optionalText(env.LOCALAPPDATA) ?? join(home, "AppData", "Local") : process.platform === "darwin" ? join(home, "Library", "Application Support") : xdgConfig && isAbsolute(xdgConfig) ? xdgConfig : join(home, ".config"), "powercontext", "clients.json");
-	const legacy = join(home, ".config", "powercontext", "clients.json");
-	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? (!existsSync(preferred) && existsSync(legacy) ? legacy : preferred);
+	const path = configuredPath?.startsWith("~/") ? join(home, configuredPath.slice(2)) : configuredPath ?? join(home, ".config", "powercontext", "clients.json");
 	let contents;
 	try {
 		contents = readFileSync(path, "utf8");

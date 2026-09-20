@@ -17,14 +17,10 @@ On macOS it is `~/Library/Application Support/powercontext`; on Windows it is `%
 selects only that file; `--no-env-file` disables all file discovery. Foreground precedence is CLI options, process
 environment, the selected file, then built-in defaults.
 
-Clients store connections in `clients.json` in the same configuration directory, overridable with
-`POWERCONTEXT_CLIENT_CONFIG_FILE`. When the new location does not exist, an existing
-`~/.config/powercontext/clients.json` remains in use. Client URLs are independent of listener addresses; remote clients
-read configuration on their own machine. `powercontext config show --json` reports sources, the effective port, and
-database location with credentials redacted. These are configured values, not a claim about the running process.
-Computing effective Server settings requires the `server` extra. With only `powercontext[cli]` installed, use
-`powercontext config show` to inspect the selected file's redacted assignments and `powercontext doctor <host>`
-to inspect the client connection.
+Clients retain their existing `~/.config/powercontext/clients.json` location, overridable with
+`POWERCONTEXT_CLIENT_CONFIG_FILE`. Client URLs are independent of listener addresses; remote clients read their own
+local configuration. `powercontext config show --json` displays the selected file's assignments with credentials
+redacted. Use `service status --json` for the registered port and data directory, and `doctor <host>` to check a client.
 
 New installations default to port `17429`. Upgrades preserve configured ports and registered service data directories.
 A port conflict fails startup; change the configuration and restart rather than selecting a new port automatically.

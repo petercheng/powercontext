@@ -190,41 +190,21 @@ powercontext setup codex --configure-only --server-url http://127.0.0.1:18321 --
 powercontext doctor codex --json
 ```
 
-将 `codex` 替换为已使用的 `claude-code`、`dsh`、`openclaw`、`pi`、`opencode`、`hermes` 或 `workbuddy`。
-`--configure-only` 更新连接配置，不重新安装插件，不重启服务或宿主。输出包含配置文件位置、有效地址和重载提示。
-若环境变量覆盖了新配置，先调整该变量，再重载 MCP、重启宿主或开始新会话。OpenClaw 需重启 gateway。
+将 `codex` 替换为已安装的宿主名称。`--configure-only` 将连接 URL 和 HTTP 许可保存到共享配置及宿主配置，
+随后需重载宿主；OpenClaw 需重启 gateway。认证和连通性由 `doctor <host>` 检查。凭据仍绑定原 URL，
+新地址需要不同凭据时，使用宿主已有的认证配置方式更新。
 
-该选项会实际写入配置文件，只处理连接地址、传输设置和显式提供的凭据。命令不修改服务端监听端口，也不探测连接健康。
-结果状态与退出码如下：
-
-| `status` | 退出码 | 含义与后续操作 |
+| `status` | 退出码 | 含义 |
 | --- | --- | --- |
-| `applied` | `0` | 配置已应用，无已知配置阻碍；按 `reload_required` 重载宿主后运行 `doctor` |
-| `needs_attention` | `3` | 配置已写入，但存在地址覆盖、HTTP 策略阻止、无法确定有效地址或凭据异常；先处理 `warnings` |
-| `failed` | `1` | 准备或写入失败；查看 `error` 和回滚结果 |
+| `applied` | `0` | 连接配置已保存；重载宿主并运行 `doctor` |
+| `needs_attention` | `3` | 配置已保存，但有效地址无法确定、被覆盖或被 HTTP 策略阻止；查看 `warnings` |
+| `failed` | `1` | 配置未能保存；查看 `error` |
 
-参数解析成功后，`--json` 在以上三种结果下都向 stdout 输出一个 JSON 对象。CLI 参数用法错误沿用退出码 `2`
-及 stderr 用法提示，不属于该 JSON 结果。`connection_status` 始终为 `not_checked`，退出码 `0` 不代表服务可达或认证成功。
-`effective_server_url` 是当前环境与配置解析出的地址，不是运行中宿主的连接状态；无法确定时为 `null`。
+`--json` 将结果写入 stdout，参数错误沿用退出码 `2`。写入复用现有的单文件原子替换，失败时尝试恢复已改文件；
+恢复失败会在 stderr 标明文件路径。修复错误并重新执行后再重载宿主。退出码 `0` 不代表认证成功或服务可达；
+`effective_server_url` 表示当前配置解析的地址，不代表运行中宿主的连接。
 
-失败结果的 `error` 包含 `stage`（`prepare` 或 `write`）和 `message`。写入失败会尝试恢复原文件，
-`rollback_status` 为 `restored` 或 `incomplete`；`unrestored_files` 列出仍需检查修复的路径。未开始写入时为 `not_needed`。
-回滚不完整时先修复文件，再重载宿主。单文件写入使用原子替换，多文件更新仅提供进程内尽力回滚；进程被强制终止时
-不能保证所有文件一起回退。
-
-凭据仍绑定原服务 URL 时，输出 `url_mismatch`；通过原有的宿主认证环境变量或 `POWERCONTEXT_CLIENT_API_TOKEN`
-提供目标服务的凭据后重新配置。不会自动将旧凭据绑定到新地址。共享 `clients.json` 只保存连接偏好，诊断 JSON 不展示凭据。
-
-Codex 原生 MCP 从宿主环境中的 `POWERCONTEXT_CODEX_AUTHORIZATION` 读取凭据；保存供 Hook 使用的凭据文件不会自动让
-原生 MCP 读到它。Windows 下，重新配置也会更新用户环境，重启 Codex Desktop 后生效；其他平台需在启动 Codex 的环境中
-设置完整的 `Bearer <token>`。原生 MCP 无法使用该凭据，或 Windows 环境更新失败时，命令返回 `needs_attention`，配置文件
-保持已保存状态。
-损坏凭据和不安全的凭据文件权限也会产生 `needs_attention`。没有保存凭据本身不视为配置失败，目标服务是否要求认证由后续
-`doctor` 检查。
-
-Agent 在 MCP 无法连接时应使用本地 CLI 或文件检查，先报告配置路径、当前 URL 和具体错误；在已获授权的范围内
-修订客户端连接。不要依赖已断开的 MCP 进行恢复，也不要通过试探端口猜测服务位置。
-
+Agent 在 MCP 断开时可使用上述本地命令修复，无需依赖 MCP 服务，也不应通过试探端口猜测服务位置。
 
 ## 本地 tracing 示例与已有 Server 配置冲突
 

@@ -19,40 +19,19 @@ from __future__ import annotations
 import json
 import os
 import shlex
-from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import typer
 
 from powercontext.cli.native_transport import _home, _object_at, _read, resolve_host_transport
 from powercontext.cli.transport import (
     SetupTransport,
-    hermes_config_file,
     is_remote_http,
     prepare_setup_transport,
     save_setup_transport,
 )
 from powercontext.client.transport_policy import client_config_file
-
-
-@dataclass
-class ConnectionResult:
-    """Describe configuration changes independently of live connection health."""
-
-    host: str
-    client_configuration_file: str
-    status: Literal["applied", "needs_attention", "failed"] = "failed"
-    server_url: str | None = None
-    effective_server_url: str | None = None
-    configuration_files: list[str] = field(default_factory=list)
-    authorization_state: str = "not_checked"
-    reload_required: bool = False
-    connection_status: Literal["not_checked"] = "not_checked"
-    warnings: list[str] = field(default_factory=list)
-    error: dict[str, str] | None = None
-    rollback_status: Literal["not_needed", "restored", "incomplete"] = "not_needed"
-    unrestored_files: list[str] = field(default_factory=list)
 
 
 def configure_connection(
@@ -62,152 +41,60 @@ def configure_connection(
     allow_insecure_http: bool | None = None,
     json_output: bool = False,
 ) -> None:
-    """Write connection settings and report applied, needs_attention, or failed."""
+    """Update connection files; leave authentication and health checks to doctor."""
 
-    result = _configure_connection(
-        host, server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
-    )
-    _write_result(result, json_output=json_output)
-    exit_code = {"applied": 0, "needs_attention": 3, "failed": 1}[result.status]
-    if exit_code:
-        raise typer.Exit(code=exit_code)
+    from powercontext.cli.system import SetupError
 
-
-def _configure_connection(
-    host: str, *, server_url: str | None, allow_insecure_http: bool | None, json_output: bool
-) -> ConnectionResult:
-    from powercontext.cli.authorization import (
-        configure_stored_authorization,
-        credential_path,
-        setup_authorization_value,
-    )
-    from powercontext.cli.system import SetupError, _write_bytes_atomically
-
-    result = ConnectionResult(host=host, client_configuration_file=str(client_config_file()))
     try:
         settings = prepare_setup_transport(
             host, server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        result.server_url = settings.server_url
-        updates = _native_updates(settings)
-        destinations = [path for path, _payload in updates]
-        destinations.append(client_config_file())
-        if host == "hermes":
-            destinations.append(hermes_config_file())
-        has_credentials = host not in {"hermes", "openclaw"}
-        if has_credentials:
-            destinations.append(credential_path(host))
-        result.configuration_files = [str(path) for path in destinations]
-        snapshots = {path: path.read_bytes() if path.exists() else None for path in destinations}
+        save_setup_transport(settings, native_updates=_native_updates(settings))
     except (OSError, ValueError, SetupError) as error:
-        result.error = {"stage": "prepare", "message": str(error)}
-        return result
+        if json_output:
+            typer.echo(json.dumps({"host": host, "status": "failed", "error": str(error)}))
+        else:
+            typer.echo(f"Connection configuration failed: {error}", err=True)
+        raise typer.Exit(code=1) from error
 
-    try:
-        for path, payload in updates:
-            _write_bytes_atomically(path, (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode())
-        save_setup_transport(settings)
-        result.authorization_state = (
-            configure_stored_authorization(host, server_url=settings.server_url, value=setup_authorization_value(host))
-            if has_credentials
-            else "host_managed"
-        )
-    except (OSError, ValueError, SetupError) as error:
-        result.error = {"stage": "write", "message": str(error)}
-        result.unrestored_files = _restore_configuration(snapshots)
-        result.rollback_status = "incomplete" if result.unrestored_files else "restored"
-        return result
-
-    if host == "codex":
-        _configure_codex_authorization(settings.server_url, result)
-    _inspect_connection(settings, result)
-    return result
-
-
-def _restore_configuration(snapshots: dict[Path, bytes | None]) -> list[str]:
-    from powercontext.cli.system import _write_bytes_atomically
-
-    unrestored = []
-    for path, original in reversed(list(snapshots.items())):
-        try:
-            if original is None:
-                path.unlink(missing_ok=True)
-            elif not path.exists() or path.read_bytes() != original:
-                _write_bytes_atomically(path, original)
-        except OSError:
-            unrestored.append(str(path))
-    return unrestored
-
-
-def _inspect_connection(settings: SetupTransport, result: ConnectionResult) -> None:
-    authorization_warnings = {
-        "url_mismatch": "The saved credential belongs to another URL; provide the credential for this endpoint.",
-        "invalid": "The saved credential is invalid; replace it with a valid credential for this endpoint.",
-        "unsafe_permissions": "The saved credential has unsafe permissions; restrict access before reloading the host.",
-    }
-    if warning := authorization_warnings.get(result.authorization_state):
-        result.warnings.append(warning)
-    try:
-        result.effective_server_url, allowed = resolve_host_transport(settings.host)
-        if result.effective_server_url != settings.server_url:
-            result.warnings.append(
-                f"An existing override still selects {result.effective_server_url}; update it and reload the host."
-            )
-        if is_remote_http(result.effective_server_url) and not allowed:
-            result.warnings.append(
-                "The effective configuration blocks remote HTTP; update the host's HTTP consent override "
-                "or select HTTPS before reloading."
-            )
-    except ValueError as error:
-        result.warnings.append(str(error))
-    result.status = "needs_attention" if result.warnings else "applied"
-    result.reload_required = True
-
-
-def _configure_codex_authorization(server_url: str, result: ConnectionResult) -> None:
-    from powercontext.cli.authorization import (
-        configure_codex_desktop_authorization,
-        credential_path,
-        read_stored_authorization,
-    )
-    from powercontext.cli.system import _resolve_codex_native_authorization
-
-    try:
-        stored = read_stored_authorization(credential_path("codex"), server_url=server_url)
-        if stored.authorization is not None:
-            configure_codex_desktop_authorization(stored.authorization)
-        diagnostic, _authorization = _resolve_codex_native_authorization(server_url + "/mcp")
-    except OSError:
-        result.warnings.append("Cannot update or read Codex Desktop authorization; run `powercontext doctor codex`.")
-        return
-    if not diagnostic.ok:
-        result.warnings.append(
-            "Codex native MCP authorization needs attention; set POWERCONTEXT_CODEX_AUTHORIZATION "
-            "to the endpoint's complete Bearer credential in the host environment, then reload Codex."
-        )
-
-
-def _write_result(result: ConnectionResult, *, json_output: bool) -> None:
+    effective, warnings = _connection_warnings(settings)
+    status = "needs_attention" if warnings else "applied"
     if json_output:
-        typer.echo(json.dumps(asdict(result), indent=2, ensure_ascii=False))
-        return
-    failed = result.status == "failed"
-    typer.echo(f"Connection configuration {result.status.replace('_', ' ')}: {result.host}", err=failed)
-    typer.echo(f"Client configuration: {result.client_configuration_file}", err=failed)
-    if result.error is not None:
-        typer.echo(f"{result.error['stage']}: {result.error['message']}", err=True)
-    if result.rollback_status != "not_needed":
-        typer.echo(f"Rollback: {result.rollback_status}", err=True)
-    for path in result.unrestored_files:
-        typer.echo(f"WARNING: could not restore {path}; inspect its connection settings before reloading.", err=True)
-    for warning in result.warnings:
-        typer.echo(f"WARNING: {warning}")
-    if failed:
-        return
-    typer.echo(f"Saved URL: {result.server_url}")
-    typer.echo(f"Effective URL: {result.effective_server_url or 'unknown'}")
-    typer.echo("Connection health: not checked.")
-    typer.echo(f"Reload {result.host} or start a new session, then run `powercontext doctor {result.host}`.")
+        typer.echo(
+            json.dumps(
+                {
+                    "host": host,
+                    "status": status,
+                    "server_url": settings.server_url,
+                    "effective_server_url": effective,
+                    "client_configuration_file": str(client_config_file()),
+                    "warnings": warnings,
+                },
+                indent=2,
+            )
+        )
+    else:
+        typer.echo(f"Connection configuration {status.replace('_', ' ')}: {host}")
+        typer.echo(f"Client configuration: {client_config_file()}")
+        typer.echo(f"Saved URL: {settings.server_url}; effective URL: {effective or 'unknown'}")
+        for warning in warnings:
+            typer.echo(f"WARNING: {warning}", err=True)
+        typer.echo(f"Reload {host}, then run `powercontext doctor {host}` to check authentication and connectivity.")
+    if warnings:
+        raise typer.Exit(code=3)
+
+
+def _connection_warnings(settings: SetupTransport) -> tuple[str | None, list[str]]:
+    try:
+        effective, allowed = resolve_host_transport(settings.host)
+    except ValueError as error:
+        return None, [str(error)]
+    warnings = []
+    if effective != settings.server_url:
+        warnings.append(f"An existing override still selects {effective}; update it before reloading the host.")
+    if is_remote_http(effective) and not allowed:
+        warnings.append("The effective configuration blocks remote HTTP; update the consent override or use HTTPS.")
+    return effective, warnings
 
 
 def _native_updates(settings: SetupTransport) -> list[tuple[Path, dict[str, Any]]]:

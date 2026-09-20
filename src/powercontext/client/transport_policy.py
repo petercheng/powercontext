@@ -27,7 +27,6 @@ from pydantic_settings import BaseSettings, InitSettingsSource, PydanticBaseSett
 from typing_extensions import override
 
 from powercontext.defaults import DEFAULT_SERVER_URL
-from powercontext.paths import client_config_path
 
 _HTTP_URL = TypeAdapter(HttpUrl)
 _DEFAULT_SERVER_URL = DEFAULT_SERVER_URL
@@ -36,7 +35,8 @@ _DEFAULT_SERVER_URL = DEFAULT_SERVER_URL
 def client_config_file() -> Path:
     """Return the shared, non-secret host settings file."""
 
-    return client_config_path()
+    override = os.environ.get("POWERCONTEXT_CLIENT_CONFIG_FILE")
+    return Path(override).expanduser() if override else Path.home() / ".config" / "powercontext" / "clients.json"
 
 
 def normalize_client_url(value: str) -> str:

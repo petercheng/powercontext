@@ -17,30 +17,18 @@
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
+
+from platformdirs import user_config_path, user_data_path
 
 POWERCONTEXT_HOME_ENV = "POWERCONTEXT_HOME"
 DEFAULT_SERVER_ENV_FILE = Path(".env")
 
 
-def powercontext_config_dir() -> Path:
-    """Locate user configuration, without depending on optional Server packages."""
-
-    if sys.platform == "win32":
-        root = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
-    elif sys.platform == "darwin":
-        root = Path.home() / "Library" / "Application Support"
-    else:
-        configured = os.environ.get("XDG_CONFIG_HOME", "")
-        root = Path(configured) if configured and Path(configured).is_absolute() else Path.home() / ".config"
-    return root / "powercontext"
-
-
 def default_server_env_file() -> Path:
     """Return the persistent configuration path for a personal Server."""
 
-    return powercontext_config_dir() / "server.env"
+    return user_config_path("powercontext", appauthor=False) / "server.env"
 
 
 def resolve_server_environment_file(
@@ -63,29 +51,12 @@ def resolve_server_environment_file(
     return Path(os.path.abspath(candidate)) if candidate.is_file() else None
 
 
-def client_config_path() -> Path:
-    """Prefer the platform path, retaining an existing legacy client file."""
-
-    configured = os.environ.get("POWERCONTEXT_CLIENT_CONFIG_FILE")
-    if configured:
-        return Path(configured).expanduser()
-    preferred = powercontext_config_dir() / "clients.json"
-    legacy = Path.home() / ".config" / "powercontext" / "clients.json"
-    return legacy if not preferred.exists() and legacy.is_file() else preferred
-
-
 def powercontext_data_dir() -> Path:
     """Return the user data directory without creating it."""
 
     configured = os.environ.get(POWERCONTEXT_HOME_ENV)
     if configured:
         return Path(configured).expanduser().resolve()
-    if sys.platform not in {"darwin", "win32"}:
-        configured = os.environ.get("XDG_DATA_HOME", "")
-        root = Path(configured) if configured and Path(configured).is_absolute() else Path.home() / ".local" / "share"
-        return root / "powercontext"
-    from platformdirs import user_data_path
-
     return user_data_path("powercontext", appauthor=False)
 
 
@@ -116,12 +87,10 @@ def sqlite_url(path: Path) -> str:
 __all__ = [
     "DEFAULT_SERVER_ENV_FILE",
     "POWERCONTEXT_HOME_ENV",
-    "client_config_path",
     "default_database_path",
     "default_scheduler_path",
     "default_seekdb_path",
     "default_server_env_file",
-    "powercontext_config_dir",
     "powercontext_data_dir",
     "resolve_server_environment_file",
     "sqlite_url",

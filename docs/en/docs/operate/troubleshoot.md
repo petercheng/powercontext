@@ -165,46 +165,24 @@ powercontext setup codex --configure-only --server-url http://127.0.0.1:18321 --
 powercontext doctor codex --json
 ```
 
-Replace `codex` with `claude-code`, `dsh`, `openclaw`, `pi`, `opencode`, `hermes`, or `workbuddy` as appropriate.
-`--configure-only` updates connection settings without reinstalling plugins or restarting either process. Its output
-includes configuration paths, the effective URL, and a reload instruction. If an environment variable overrides the
-saved URL, update that variable before reloading MCP or restarting the host. OpenClaw requires a gateway restart.
+Replace `codex` with the installed host name. `--configure-only` saves the connection URL and HTTP consent
+in the shared and native host configuration. Reload the host afterward; OpenClaw requires a gateway restart.
+Authentication and connectivity are checked by `doctor <host>`. Credentials remain bound to their original URL;
+use the host's existing authorization setup when the new endpoint requires different credentials.
 
-The option writes configuration files and handles connection URLs, transport settings, and explicitly supplied
-credentials. It does not change the Server listener or probe connection health. Results use these statuses:
-
-| `status` | Exit code | Meaning and next step |
+| `status` | Exit code | Meaning |
 | --- | --- | --- |
-| `applied` | `0` | Settings were applied without known configuration blockers; follow `reload_required`, then run `doctor` |
-| `needs_attention` | `3` | Settings were written, but an override, blocked HTTP policy, unknown effective URL, or credential problem needs attention; address `warnings` first |
-| `failed` | `1` | Preparation or writing failed; inspect `error` and the rollback result |
+| `applied` | `0` | Connection settings saved; reload the host and run `doctor` |
+| `needs_attention` | `3` | Settings saved, but the effective address is unknown, overridden, or blocked by HTTP policy; read `warnings` |
+| `failed` | `1` | Settings could not be saved; read `error` |
 
-After argument parsing succeeds, `--json` emits one JSON object on stdout for all three outcomes. CLI usage errors
-retain exit code `2` and usage text on stderr, outside this JSON contract. `connection_status` is always `not_checked`;
-exit code `0` does not establish reachability or successful authentication. `effective_server_url` reflects the current
-environment and configuration, not the connection held by a running host; it is `null` when resolution fails.
+`--json` writes the result to stdout. Parameter errors retain exit code `2`. Writes use the existing atomic file
+replacement and attempt to restore earlier files on failure; any restoration failure identifies the affected path
+on stderr. Correct the error and rerun before reloading the host. Exit code `0` does not verify authentication or
+reachability, and `effective_server_url` describes current configuration, not a running host's connection.
 
-Failure results include an `error` with `stage` (`prepare` or `write`) and `message`. A failed write attempts to restore
-the original files: `rollback_status` is `restored` or `incomplete`, and `unrestored_files` lists paths still needing
-repair. It is `not_needed` if writing never began. Repair incomplete rollback before reloading the host. Each file uses
-atomic replacement; recovery across files is best effort within the process, with no all-or-nothing guarantee if the
-process is forcibly terminated.
-
-An existing credential bound to the old URL is reported as `url_mismatch`. Supply the target endpoint's credential
-through the existing host authorization environment variable or `POWERCONTEXT_CLIENT_API_TOKEN` and reconfigure again.
-Old credentials are not rebound automatically. Shared `clients.json` stores connection preferences only; diagnostic JSON omits credentials.
-
-Codex native MCP reads authorization from `POWERCONTEXT_CODEX_AUTHORIZATION` in the host environment. Saving a token
-for Hooks does not make it available to native MCP. On Windows, reconfiguration also updates the user environment
-used after restarting Codex Desktop. On other platforms, set the complete `Bearer <token>` value in the environment
-that launches Codex. If native MCP cannot use the credential, or the Windows environment update fails, the command
-returns `needs_attention`; the configuration files remain saved.
-Invalid credentials and unsafe credential-file permissions also produce `needs_attention`. An absent saved credential
-alone is not a configuration failure; a subsequent `doctor` check determines whether the Server requires authentication.
-
-When MCP is disconnected, an agent should inspect local CLI output or files, report the configuration path, selected
-URL, and concrete error, then make authorized connection changes. Recovery does not depend on the disconnected MCP
-server and must not guess an endpoint by probing other ports.
+An agent can use these local commands while MCP is disconnected; recovery does not require the MCP service or
+guessing its port.
 
 ### Permissions for metrics and capabilities
 

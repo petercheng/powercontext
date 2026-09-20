@@ -658,3 +658,26 @@ def test_existing_scope_is_requested_separately_for_each_agent(tmp_path: Path) -
     client = parse_environment(output.read_text())
     assert client["POWERCONTEXT_CODEX_SCOPE_ID"] == "SCOPE_CODEX"
     assert client["POWERCONTEXT_CLAUDE_SCOPE_ID"] == "SCOPE_CLAUDE"
+
+
+def test_editing_default_port_preserves_remote_connections(tmp_path: Path) -> None:
+    output = tmp_path / "server.env"
+    output.write_text(
+        "POWERCONTEXT_SERVER_DATABASE_KIND=sqlite\n"
+        "POWERCONTEXT_SERVER_HTTP_PORT=17429\n"
+        "POWERCONTEXT_CLIENT_SERVER_URL=http://127.0.0.1:17429\n"
+        "POWERCONTEXT_CLAUDE_SERVER_URL=http://localhost:17429/\n"
+        "POWERCONTEXT_PI_BASE_URL=https://proxy.example/powercontext\n"
+    )
+    result = CliRunner().invoke(
+        app,
+        ["init", "--language", "en", "--output", str(output)],
+        input=f"sqlite\n{tmp_path / 'context.db'}\nedit\nnetwork\nlocal\nn\n18321\ndone\ny\n",
+    )
+
+    assert result.exit_code == 0, result.output
+    values = parse_environment(output.read_text())
+    assert values["POWERCONTEXT_SERVER_HTTP_PORT"] == "18321"
+    assert values["POWERCONTEXT_CLIENT_SERVER_URL"] == "http://127.0.0.1:18321"
+    assert values["POWERCONTEXT_CLAUDE_SERVER_URL"] == "http://127.0.0.1:18321"
+    assert values["POWERCONTEXT_PI_BASE_URL"] == "https://proxy.example/powercontext"
