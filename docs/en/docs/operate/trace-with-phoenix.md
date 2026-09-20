@@ -17,7 +17,7 @@ This guide assumes a Linux or macOS development machine with:
 
 - Docker Engine; use Docker Desktop on macOS;
 - `uv`, Bash, `curl`, and `python3`;
-- ports `6006` and `8000` available locally.
+- ports `6006` and `17429` available locally.
 
 Check the tool versions before starting:
 

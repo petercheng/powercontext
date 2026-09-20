@@ -16,7 +16,7 @@ generation 与 embedding 调用也会被 trace，因此一条 trace 里可以同
 
 - 已安装并启动 Docker；macOS 使用 Docker Desktop。
 - 已安装 `uv`、Bash、`curl` 和 `python3`（用于提取 API 响应中的 Scope ID）。
-- 本机端口 `6006` 和 PowerContext Server 使用的端口（默认 `8000`）未被占用。
+- 本机端口 `6006` 和 PowerContext Server 使用的端口（默认 `17429`）未被占用。
 
 开始前可以运行以下命令确认工具可用：
 

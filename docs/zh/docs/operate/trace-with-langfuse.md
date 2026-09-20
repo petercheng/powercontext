@@ -18,7 +18,7 @@ Langfuse SDK：只是把 [用 Phoenix 查看 trace](trace-with-phoenix.md) 中�
 - 已安装 Git。
 - 已安装并启动 Docker 与 Docker Compose；macOS 使用 Docker Desktop。
 - 已安装 `uv`、Bash、`curl` 和 `python3`（用于提取 API 响应中的 Scope ID）。
-- 本机端口 `3000` 和 PowerContext Server 使用的端口（默认 `8000`）未被占用。
+- 本机端口 `3000` 和 PowerContext Server 使用的端口（默认 `17429`）未被占用。
 
 开始前可以运行以下命令确认工具可用：
 

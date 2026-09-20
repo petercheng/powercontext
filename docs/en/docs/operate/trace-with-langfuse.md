@@ -20,7 +20,7 @@ This guide assumes a Linux or macOS development machine with:
 - Git;
 - Docker Engine and Docker Compose, or Docker Desktop;
 - `uv`, Bash, `curl`, and `python3`;
-- ports `3000` and `8000` available locally.
+- ports `3000` and `17429` available locally.
 
 Check the tool versions before starting:
 
