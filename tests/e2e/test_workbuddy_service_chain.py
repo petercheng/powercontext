@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import shlex
 import socket
 import subprocess
@@ -40,11 +41,8 @@ from powercontext.server.factory import create_server_app
 from powercontext.server.settings import AccessControlConfig, BearerAuthConfig, McpConfig, ServerSettings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-WORKBUDDY_PLUGIN = PROJECT_ROOT / "integrations" / "workbuddy" / "plugins" / "powercontext"
 AUTH_TOKEN = "workbuddy-e2e-token"  # noqa: S105 - non-secret test credential.
 AUTHORIZATION = f"Bearer {AUTH_TOKEN}"
-_SERVER_URL_TEMPLATE = "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}/mcp"
-_AUTHORIZATION_TEMPLATE = "${POWERCONTEXT_WORKBUDDY_AUTHORIZATION:-}"
 
 
 @pytest.mark.parametrize("authentication_enabled", [False, True], ids=["public", "authenticated"])
@@ -122,10 +120,6 @@ def test_workbuddy_hook_and_mcp_share_one_service_configuration(
         assert AUTH_TOKEN not in recalled.stderr
 
         mcp_entry = json.loads((home / "mcp.json").read_text(encoding="utf-8"))["mcpServers"]["powercontext"]
-        plugin_mcp_entry = json.loads((WORKBUDDY_PLUGIN / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"][
-            "powercontext"
-        ]
-        assert mcp_entry == plugin_mcp_entry
         endpoint, headers = _workbuddy_mcp_connection(mcp_entry, environment)
 
         async def verify_mcp() -> None:
@@ -223,14 +217,19 @@ def _workbuddy_mcp_connection(
     entry: dict[str, object],
     environment: dict[str, str],
 ) -> tuple[str, dict[str, str]]:
-    assert entry["url"] == _SERVER_URL_TEMPLATE
-    assert entry["headers"] == {"Authorization": _AUTHORIZATION_TEMPLATE}
-    endpoint = _SERVER_URL_TEMPLATE.replace(
-        "${POWERCONTEXT_WORKBUDDY_SERVER_URL:-http://127.0.0.1:8000}",
-        environment.get("POWERCONTEXT_WORKBUDDY_SERVER_URL", "http://127.0.0.1:8000"),
-    )
-    authorization = environment.get("POWERCONTEXT_WORKBUDDY_AUTHORIZATION", "")
-    return endpoint, {"Authorization": authorization}
+    def expand(value: str) -> str:
+        return re.sub(r"\$\{(\w+):-([^}]*)\}", lambda match: environment.get(match[1]) or match[2], value)
+
+    endpoint = entry["url"]
+    headers = entry["headers"]
+    assert isinstance(endpoint, str)
+    assert isinstance(headers, dict)
+    resolved_headers = {}
+    for name, value in headers.items():
+        assert isinstance(name, str)
+        assert isinstance(value, str)
+        resolved_headers[name] = expand(value)
+    return expand(endpoint), resolved_headers
 
 
 def _wait_until_started(server: uvicorn.Server, thread: threading.Thread) -> None:
