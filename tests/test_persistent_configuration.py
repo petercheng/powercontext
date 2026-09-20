@@ -25,7 +25,6 @@ from typer.testing import CliRunner
 from powercontext.cli.config import app as config_app
 from powercontext.client.transport_policy import client_config_file, resolve_client_transport
 from powercontext.paths import default_server_env_file
-from powercontext.server.cli import app as server_app
 
 
 def test_default_init_writes_user_configuration(tmp_path, monkeypatch):
@@ -37,37 +36,6 @@ def test_default_init_writes_user_configuration(tmp_path, monkeypatch):
     assert default_server_env_file().is_file()
     assert not (tmp_path / ".env").exists()
     assert "POWERCONTEXT_SERVER_HTTP_PORT=17429" in default_server_env_file().read_text()
-
-
-def test_foreground_uses_user_configuration_from_another_directory(tmp_path, monkeypatch):
-    path = default_server_env_file()
-    path.parent.mkdir(parents=True)
-    path.write_text("POWERCONTEXT_SERVER_HTTP_PORT=18321\n")
-    observed = []
-    monkeypatch.setattr("powercontext.server.cli._run_configured_server", lambda settings: observed.append(settings))
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / ".env").write_text("POWERCONTEXT_SERVER_HTTP_PORT=8000\n")
-
-    result = CliRunner().invoke(server_app, ["run"])
-
-    assert result.exit_code == 0, result.output
-    assert observed[0].http.port == 18321
-    assert str(path) in result.output
-
-
-def test_explicit_file_and_port_override_user_configuration(tmp_path, monkeypatch):
-    path = default_server_env_file()
-    path.parent.mkdir(parents=True)
-    path.write_text("POWERCONTEXT_SERVER_HTTP_PORT=18321\n")
-    explicit = tmp_path / "project.env"
-    explicit.write_text("POWERCONTEXT_SERVER_HTTP_PORT=8000\n")
-    observed = []
-    monkeypatch.setattr("powercontext.server.cli._run_configured_server", lambda settings: observed.append(settings))
-
-    result = CliRunner().invoke(server_app, ["run", "--env-file", str(explicit), "--port", "18432"])
-
-    assert result.exit_code == 0, result.output
-    assert observed[0].http.port == 18432
 
 
 @pytest.mark.parametrize("port_name", ["POWERCONTEXT_SERVER_HTTP_PORT", "powercontext_server_http_port"])

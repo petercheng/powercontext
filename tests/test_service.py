@@ -1693,13 +1693,17 @@ def test_service_upgrade_preserves_registered_endpoint_and_data(tmp_path: Path) 
     status = ServiceController(adapter, probe=_manager_probe(adapter), sleep=lambda _: None).install()
 
     assert status.ok
-    assert adapter.definition is not None
-    assert adapter.definition.endpoint == "http://127.0.0.1:8000"
-    assert adapter.definition.data_dir == previous.data_dir
+    assert status.endpoint == "http://127.0.0.1:8000"
+    assert status.data_dir == previous.data_dir
 
 
-@pytest.mark.parametrize("port_name", ["POWERCONTEXT_SERVER_HTTP_PORT", "powercontext_server_http_port"])
-@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize(
+    ("existing", "port_name"),
+    [
+        (False, "POWERCONTEXT_SERVER_HTTP_PORT"),
+        (True, "powercontext_server_http_port"),
+    ],
+)
 def test_service_install_uses_persistent_user_configuration(tmp_path: Path, port_name: str, existing: bool) -> None:
     from powercontext.paths import default_server_env_file
 

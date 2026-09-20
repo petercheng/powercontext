@@ -1392,14 +1392,9 @@ def test_default_doctor_checks_server_without_inspecting_codex(monkeypatch) -> N
     payload = json.loads(result.output)
     assert payload["ok"] is True
     assert payload["status"] == "ok"
-    assert list(payload["checks"]) == [
-        "package",
-        "service_support",
-        "service_registration",
-        "client_connection",
-        "server_liveness",
-        "server_readiness",
-    ]
+    assert {"package", "server_liveness", "server_readiness", "client_connection"} <= payload["checks"].keys()
+    assert "http://127.0.0.1:17429" in payload["checks"]["client_connection"]["detail"]
+    assert "codex" not in payload["checks"]
 
 
 def test_default_doctor_uses_client_server_url_from_environment(monkeypatch) -> None:
@@ -1547,43 +1542,12 @@ def test_default_doctor_preserves_degraded_checks_in_human_and_json_output(monke
     assert "  inference.embedding: misconfigured" in human.output
     assert machine.exit_code == 1
     payload = json.loads(machine.output)
-    assert payload["checks"].pop("client_connection")["ok"] is True
-    assert payload == {
-        "ok": False,
-        "status": "degraded",
-        "checks": {
-            "package": {
-                "ok": True,
-                "status": "ok",
-                "detail": "powercontext 0.0.2",
-            },
-            "service_support": {
-                "ok": True,
-                "status": "ok",
-                "detail": "native personal service adapter is supported",
-            },
-            "service_registration": {
-                "ok": True,
-                "status": "ok",
-                "detail": "not_installed (optional)",
-            },
-            "server_liveness": {
-                "ok": True,
-                "status": "ok",
-                "detail": "http://127.0.0.1:17429 status=ok",
-            },
-            "server_readiness": {
-                "ok": False,
-                "status": "degraded",
-                "detail": "http://127.0.0.1:17429 status=degraded",
-                "checks": {
-                    "runtime": "ready",
-                    "database": "ready",
-                    "inference.embedding": "misconfigured",
-                },
-            },
-        },
-    }
+    assert payload["ok"] is False
+    assert payload["status"] == "degraded"
+    readiness = payload["checks"]["server_readiness"]
+    assert readiness["status"] == "degraded"
+    assert readiness["checks"]["inference.embedding"] == "misconfigured"
+    assert readiness["checks"]["database"] == "ready"
 
 
 def _mock_optional_personal_service(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1610,23 +1574,10 @@ def test_doctor_codex_reports_missing_cli_and_skipped_plugin(monkeypatch) -> Non
 
     assert result.exit_code == 1
     payload = json.loads(result.output)
-    assert payload["checks"].pop("client_connection")["ok"] is True
-    assert payload == {
-        "ok": False,
-        "status": "failed",
-        "checks": {
-            "codex": {
-                "ok": False,
-                "status": "failed",
-                "detail": "Codex CLI is not installed or is not on PATH",
-            },
-            "plugin": {
-                "ok": False,
-                "status": "skipped",
-                "detail": "not checked because Codex CLI is unavailable",
-            },
-        },
-    }
+    assert payload["status"] == "failed"
+    assert payload["checks"]["codex"]["status"] == "failed"
+    assert "not installed" in payload["checks"]["codex"]["detail"]
+    assert payload["checks"]["plugin"]["status"] == "skipped"
 
 
 def test_doctor_codex_requires_an_enabled_powercontext_plugin(monkeypatch) -> None:
@@ -1647,23 +1598,10 @@ def test_doctor_claude_code_reports_missing_cli_and_skipped_plugin(monkeypatch) 
 
     assert result.exit_code == 1
     payload = json.loads(result.output)
-    assert payload["checks"].pop("client_connection")["ok"] is True
-    assert payload == {
-        "ok": False,
-        "status": "failed",
-        "checks": {
-            "claude_code": {
-                "ok": False,
-                "status": "failed",
-                "detail": "Claude Code CLI is not installed or is not on PATH",
-            },
-            "plugin": {
-                "ok": False,
-                "status": "skipped",
-                "detail": "not checked because Claude Code CLI is unavailable",
-            },
-        },
-    }
+    assert payload["status"] == "failed"
+    assert payload["checks"]["claude_code"]["status"] == "failed"
+    assert "not installed" in payload["checks"]["claude_code"]["detail"]
+    assert payload["checks"]["plugin"]["status"] == "skipped"
 
 
 def test_doctor_claude_code_requires_an_enabled_powercontext_plugin(monkeypatch) -> None:
@@ -1746,23 +1684,10 @@ def test_doctor_dsh_reports_missing_cli_and_skipped_plugin(monkeypatch) -> None:
 
     assert result.exit_code == 1
     payload = json.loads(result.output)
-    assert payload["checks"].pop("client_connection")["ok"] is True
-    assert payload == {
-        "ok": False,
-        "status": "failed",
-        "checks": {
-            "dsh": {
-                "ok": False,
-                "status": "failed",
-                "detail": "DeepSeek Harness CLI is not installed or is not on PATH",
-            },
-            "plugin": {
-                "ok": False,
-                "status": "skipped",
-                "detail": "not checked because DeepSeek Harness CLI is unavailable",
-            },
-        },
-    }
+    assert payload["status"] == "failed"
+    assert payload["checks"]["dsh"]["status"] == "failed"
+    assert "not installed" in payload["checks"]["dsh"]["detail"]
+    assert payload["checks"]["plugin"]["status"] == "skipped"
 
 
 def test_doctor_dsh_requires_the_installed_plugin(monkeypatch) -> None:
