@@ -28,10 +28,9 @@ from pydantic_settings import BaseSettings, EnvSettingsSource, PydanticBaseSetti
 from typing_extensions import override
 
 from powercontext.cli.env_file import EnvironmentFileError, environment_context, read_environment_file
-from powercontext.paths import POWERCONTEXT_HOME_ENV, default_server_env_file
+from powercontext.paths import DEFAULT_SERVER_ENV_FILE, POWERCONTEXT_HOME_ENV, resolve_server_environment_file
 from powercontext.server.settings import ServerSettings
 
-DEFAULT_SERVER_ENV_FILE = Path(".env")
 _SERVER_ENVIRONMENT_PREFIX = "POWERCONTEXT_SERVER_"
 _SERVER_ENVIRONMENT_FILE: ContextVar[Mapping[str, str] | None] = ContextVar(
     "powercontext_server_environment_file",
@@ -87,26 +86,6 @@ def _server_environment_file_context(environment: Mapping[str, str]) -> Iterator
         yield
     finally:
         _SERVER_ENVIRONMENT_FILE.reset(token)
-
-
-def resolve_server_environment_file(
-    env_file: Path | None,
-    *,
-    discover: bool,
-    directory: Path | None = None,
-) -> Path | None:
-    """Select an explicit file, user configuration, or a legacy working-directory file."""
-
-    if env_file is not None:
-        expanded = env_file.expanduser()
-        return Path(os.path.abspath(expanded))
-    if not discover:
-        return None
-    persistent = default_server_env_file()
-    if persistent.is_file():
-        return persistent
-    candidate = (Path.cwd() if directory is None else directory) / DEFAULT_SERVER_ENV_FILE
-    return Path(os.path.abspath(candidate)) if candidate.is_file() else None
 
 
 @contextmanager

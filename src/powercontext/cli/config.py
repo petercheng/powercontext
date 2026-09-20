@@ -40,7 +40,7 @@ from pydantic import ValidationError
 from powercontext.cli.env_file import EnvironmentFileError, parse_environment
 from powercontext.cli.inference_notice import write_inference_capability_notice
 from powercontext.defaults import DEFAULT_SERVER_URL
-from powercontext.paths import default_server_env_file
+from powercontext.paths import default_server_env_file, resolve_server_environment_file
 
 if TYPE_CHECKING:
     from powercontext.server.settings import ServerSettings
@@ -341,6 +341,11 @@ def show_command(
     if json_output:
         try:
             report = _configuration_report(env_file if exists else None, values, recorded_credentials)
+        except ModuleNotFoundError:
+            _fail(
+                "Effective Server settings require powercontext[server]; "
+                "use config show without --json to inspect file assignments."
+            )
         except ValueError as error:
             _fail(str(error))
         typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
@@ -372,8 +377,6 @@ def validate_command(
 
 
 def _configuration_file(path: Path | None) -> Path:
-    from powercontext.server.configuration import resolve_server_environment_file
-
     return resolve_server_environment_file(path, discover=True) or default_server_env_file()
 
 

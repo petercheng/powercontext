@@ -18,6 +18,8 @@ Linux 配置目录是 `$XDG_CONFIG_HOME/powercontext`，未设置时为 `~/.conf
 客户端将连接配置保存在同目录的 `clients.json`，可用 `POWERCONTEXT_CLIENT_CONFIG_FILE` 指定位置；新位置不存在时
 继续读取旧 `~/.config/powercontext/clients.json`。客户端 URL 独立于服务端监听地址，远程客户端只读取本机配置。
 `powercontext config show --json` 显示配置来源、有效端口和数据库位置，并脱敏凭据；配置值不代表正在运行的进程状态。
+计算完整 Server 设置需要安装 `server` extra。仅安装 `powercontext[cli]` 时，可用 `powercontext config show` 查看所选
+文件中脱敏后的赋值，用 `powercontext doctor <host>` 检查客户端连接。
 
 新安装默认使用 `17429`。已有配置和个人服务注册的端口、数据目录在升级时保留。端口被占用时启动失败，修改配置后
 重启服务；不会自动跳号。新安装的 `service install` 自动选择用户 `server.env`，已有注册继续使用记录中的配置文件。

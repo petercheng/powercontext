@@ -22,6 +22,9 @@ Clients store connections in `clients.json` in the same configuration directory,
 `~/.config/powercontext/clients.json` remains in use. Client URLs are independent of listener addresses; remote clients
 read configuration on their own machine. `powercontext config show --json` reports sources, the effective port, and
 database location with credentials redacted. These are configured values, not a claim about the running process.
+Computing effective Server settings requires the `server` extra. With only `powercontext[cli]` installed, use
+`powercontext config show` to inspect the selected file's redacted assignments and `powercontext doctor <host>`
+to inspect the client connection.
 
 New installations default to port `17429`. Upgrades preserve configured ports and registered service data directories.
 A port conflict fails startup; change the configuration and restart rather than selecting a new port automatically.

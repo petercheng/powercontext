@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 POWERCONTEXT_HOME_ENV = "POWERCONTEXT_HOME"
+DEFAULT_SERVER_ENV_FILE = Path(".env")
 
 
 def powercontext_config_dir() -> Path:
@@ -40,6 +41,26 @@ def default_server_env_file() -> Path:
     """Return the persistent configuration path for a personal Server."""
 
     return powercontext_config_dir() / "server.env"
+
+
+def resolve_server_environment_file(
+    env_file: Path | None,
+    *,
+    discover: bool,
+    directory: Path | None = None,
+) -> Path | None:
+    """Select an explicit file, user configuration, or a legacy working-directory file."""
+
+    if env_file is not None:
+        expanded = env_file.expanduser()
+        return Path(os.path.abspath(expanded))
+    if not discover:
+        return None
+    persistent = default_server_env_file()
+    if persistent.is_file():
+        return persistent
+    candidate = (Path.cwd() if directory is None else directory) / DEFAULT_SERVER_ENV_FILE
+    return Path(os.path.abspath(candidate)) if candidate.is_file() else None
 
 
 def client_config_path() -> Path:
@@ -93,6 +114,7 @@ def sqlite_url(path: Path) -> str:
 
 
 __all__ = [
+    "DEFAULT_SERVER_ENV_FILE",
     "POWERCONTEXT_HOME_ENV",
     "client_config_path",
     "default_database_path",
@@ -101,5 +123,6 @@ __all__ = [
     "default_server_env_file",
     "powercontext_config_dir",
     "powercontext_data_dir",
+    "resolve_server_environment_file",
     "sqlite_url",
 ]
