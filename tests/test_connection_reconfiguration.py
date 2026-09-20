@@ -19,7 +19,10 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
+from contextlib import nullcontext
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from typer.testing import CliRunner
@@ -132,15 +135,27 @@ def test_configure_only_changes_connection_without_an_installation(host, tmp_pat
     assert report["effective_server_url"] == NEW_URL
     assert report["reload_required"] is True
     assert load_client_settings(host)["server_url"] == NEW_URL
-    if host == "claude-code":
+    if host == "codex":
+        native = json.loads((tmp_path / "CODEX_HOME/plugins/cache/test/powercontext/1.0/.mcp.json").read_text())
+        assert native["mcpServers"]["powercontext"]["url"] == NEW_URL + "/mcp"
+    elif host == "claude-code":
         native = json.loads((tmp_path / "CLAUDE_CONFIG_DIR/settings.json").read_text())
-        assert native["pluginConfigs"]["powercontext@powercontext"]["options"]["capture_prompts"] is False
+        options = native["pluginConfigs"]["powercontext@powercontext"]["options"]
+        assert options["server_url"] == NEW_URL
+        assert options["capture_prompts"] is False
     elif host == "hermes":
         native = json.loads((tmp_path / "HERMES_HOME/powercontext/config.json").read_text())
+        assert native["base_url"] == NEW_URL
         assert native["capture"] is False
     elif host == "openclaw":
         native = json.loads((tmp_path / "OPENCLAW_STATE_DIR/openclaw.json").read_text())
-        assert native["plugins"]["entries"]["memory-powercontext"]["config"]["autoCapture"] is False
+        config = native["plugins"]["entries"]["memory-powercontext"]["config"]
+        assert config["endpoint"] == NEW_URL
+        assert config["autoCapture"] is False
+    elif host == "workbuddy":
+        native = json.loads((tmp_path / "WORKBUDDY_HOME/mcp.json").read_text())
+        assert native["mcpServers"]["powercontext"]["url"] == f"${{POWERCONTEXT_WORKBUDDY_SERVER_URL:-{NEW_URL}}}/mcp"
+        assert native["mcpServers"]["other"]["url"] == "https://other.example/mcp"
 
 
 def test_reconfiguration_keeps_url_bound_credentials_until_explicitly_replaced():
@@ -226,6 +241,76 @@ def test_configure_only_reports_an_environment_override(monkeypatch):
     assert report["effective_server_url"] == OLD_URL
     assert report["warnings"]
     assert load_client_settings("pi")["server_url"] == NEW_URL
+
+
+def test_configure_only_reports_when_the_environment_blocks_saved_http_consent(monkeypatch):
+    monkeypatch.setenv("POWERCONTEXT_PI_ALLOW_INSECURE_HTTP", "false")
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]),
+        ["setup", "pi", "--configure-only", "--server-url", "http://memory.example", "--allow-insecure-http", "--json"],
+    )
+
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["status"] == "needs_attention"
+    assert any("HTTP" in warning for warning in report["warnings"])
+    assert load_client_settings("pi")["allow_insecure_http"] is True
+
+
+def test_codex_reports_when_native_mcp_cannot_use_the_saved_credential(monkeypatch):
+    import powercontext.cli.authorization as authorization
+
+    monkeypatch.setattr(authorization, "sys", SimpleNamespace(platform="linux"))
+    monkeypatch.setenv("POWERCONTEXT_CLIENT_API_TOKEN", "replacement-token")
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "codex", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["authorization_state"] == "configured"
+    assert any("POWERCONTEXT_CODEX_AUTHORIZATION" in warning for warning in report["warnings"])
+    assert "replacement-token" not in result.output
+
+
+def test_codex_reconfiguration_updates_the_windows_desktop_credential(monkeypatch):
+    import ctypes
+
+    import powercontext.cli.authorization as authorization
+
+    registry = {"POWERCONTEXT_CODEX_AUTHORIZATION": "Bearer old-token"}
+    monkeypatch.setattr(authorization, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setitem(
+        sys.modules,
+        "winreg",
+        SimpleNamespace(
+            HKEY_CURRENT_USER=1,
+            KEY_SET_VALUE=2,
+            REG_SZ=1,
+            REG_EXPAND_SZ=2,
+            CreateKeyEx=lambda *_args, **_kwargs: nullcontext("Environment"),
+            OpenKey=lambda *_args: nullcontext("Environment"),
+            SetValueEx=lambda _key, name, _reserved, _type, value: registry.update({name: value}),
+            QueryValueEx=lambda _key, name: (registry[name], 1),
+        ),
+    )
+    monkeypatch.setattr(ctypes, "set_last_error", lambda _: None, raising=False)
+    monkeypatch.setattr(ctypes, "get_last_error", lambda: 0, raising=False)
+    monkeypatch.setattr(
+        ctypes, "windll", SimpleNamespace(user32=SimpleNamespace(SendMessageTimeoutW=lambda *_args: 1)), raising=False
+    )
+    monkeypatch.setenv("POWERCONTEXT_CLIENT_API_TOKEN", "replacement-token")
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "codex", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["status"] == "applied"
+    assert registry["POWERCONTEXT_CODEX_AUTHORIZATION"] == "Bearer replacement-token"
+    assert "replacement-token" not in result.output
 
 
 @pytest.mark.parametrize("host", ["codex", "claude-code", "hermes", "openclaw", "workbuddy"])

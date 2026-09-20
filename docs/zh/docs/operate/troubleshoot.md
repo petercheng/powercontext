@@ -200,7 +200,7 @@ powercontext doctor codex --json
 | `status` | 退出码 | 含义与后续操作 |
 | --- | --- | --- |
 | `applied` | `0` | 配置已应用，无已知配置阻碍；按 `reload_required` 重载宿主后运行 `doctor` |
-| `needs_attention` | `3` | 配置已写入，但存在地址覆盖、无法确定有效地址或凭据异常；先处理 `warnings` |
+| `needs_attention` | `3` | 配置已写入，但存在地址覆盖、HTTP 策略阻止、无法确定有效地址或凭据异常；先处理 `warnings` |
 | `failed` | `1` | 准备或写入失败；查看 `error` 和回滚结果 |
 
 参数解析成功后，`--json` 在以上三种结果下都向 stdout 输出一个 JSON 对象。CLI 参数用法错误沿用退出码 `2`
@@ -214,6 +214,11 @@ powercontext doctor codex --json
 
 凭据仍绑定原服务 URL 时，输出 `url_mismatch`；通过原有的宿主认证环境变量或 `POWERCONTEXT_CLIENT_API_TOKEN`
 提供目标服务的凭据后重新配置。不会自动将旧凭据绑定到新地址。共享 `clients.json` 只保存连接偏好，诊断 JSON 不展示凭据。
+
+Codex 原生 MCP 从宿主环境中的 `POWERCONTEXT_CODEX_AUTHORIZATION` 读取凭据；保存供 Hook 使用的凭据文件不会自动让
+原生 MCP 读到它。Windows 下，重新配置也会更新用户环境，重启 Codex Desktop 后生效；其他平台需在启动 Codex 的环境中
+设置完整的 `Bearer <token>`。原生 MCP 无法使用该凭据，或 Windows 环境更新失败时，命令返回 `needs_attention`，配置文件
+保持已保存状态。
 损坏凭据和不安全的凭据文件权限也会产生 `needs_attention`。没有保存凭据本身不视为配置失败，目标服务是否要求认证由后续
 `doctor` 检查。
 

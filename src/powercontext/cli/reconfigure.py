@@ -26,7 +26,13 @@ from typing import Any, Literal
 import typer
 
 from powercontext.cli.native_transport import _home, _object_at, _read, resolve_host_transport
-from powercontext.cli.transport import SetupTransport, hermes_config_file, prepare_setup_transport, save_setup_transport
+from powercontext.cli.transport import (
+    SetupTransport,
+    hermes_config_file,
+    is_remote_http,
+    prepare_setup_transport,
+    save_setup_transport,
+)
 from powercontext.client.transport_policy import client_config_file
 
 
@@ -112,6 +118,8 @@ def _configure_connection(
         result.rollback_status = "incomplete" if result.unrestored_files else "restored"
         return result
 
+    if host == "codex":
+        _configure_codex_authorization(settings.server_url, result)
     _inspect_connection(settings, result)
     return result
 
@@ -140,15 +148,43 @@ def _inspect_connection(settings: SetupTransport, result: ConnectionResult) -> N
     if warning := authorization_warnings.get(result.authorization_state):
         result.warnings.append(warning)
     try:
-        result.effective_server_url, _allowed = resolve_host_transport(settings.host)
+        result.effective_server_url, allowed = resolve_host_transport(settings.host)
         if result.effective_server_url != settings.server_url:
             result.warnings.append(
                 f"An existing override still selects {result.effective_server_url}; update it and reload the host."
+            )
+        if is_remote_http(result.effective_server_url) and not allowed:
+            result.warnings.append(
+                "The effective configuration blocks remote HTTP; update the host's HTTP consent override "
+                "or select HTTPS before reloading."
             )
     except ValueError as error:
         result.warnings.append(str(error))
     result.status = "needs_attention" if result.warnings else "applied"
     result.reload_required = True
+
+
+def _configure_codex_authorization(server_url: str, result: ConnectionResult) -> None:
+    from powercontext.cli.authorization import (
+        configure_codex_desktop_authorization,
+        credential_path,
+        read_stored_authorization,
+    )
+    from powercontext.cli.system import _resolve_codex_native_authorization
+
+    try:
+        stored = read_stored_authorization(credential_path("codex"), server_url=server_url)
+        if stored.authorization is not None:
+            configure_codex_desktop_authorization(stored.authorization)
+        diagnostic, _authorization = _resolve_codex_native_authorization(server_url + "/mcp")
+    except OSError:
+        result.warnings.append("Cannot update or read Codex Desktop authorization; run `powercontext doctor codex`.")
+        return
+    if not diagnostic.ok:
+        result.warnings.append(
+            "Codex native MCP authorization needs attention; set POWERCONTEXT_CODEX_AUTHORIZATION "
+            "to the endpoint's complete Bearer credential in the host environment, then reload Codex."
+        )
 
 
 def _write_result(result: ConnectionResult, *, json_output: bool) -> None:

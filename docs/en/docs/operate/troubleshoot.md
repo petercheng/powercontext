@@ -176,7 +176,7 @@ credentials. It does not change the Server listener or probe connection health. 
 | `status` | Exit code | Meaning and next step |
 | --- | --- | --- |
 | `applied` | `0` | Settings were applied without known configuration blockers; follow `reload_required`, then run `doctor` |
-| `needs_attention` | `3` | Settings were written, but an override, unknown effective URL, or credential problem needs attention; address `warnings` first |
+| `needs_attention` | `3` | Settings were written, but an override, blocked HTTP policy, unknown effective URL, or credential problem needs attention; address `warnings` first |
 | `failed` | `1` | Preparation or writing failed; inspect `error` and the rollback result |
 
 After argument parsing succeeds, `--json` emits one JSON object on stdout for all three outcomes. CLI usage errors
@@ -193,6 +193,12 @@ process is forcibly terminated.
 An existing credential bound to the old URL is reported as `url_mismatch`. Supply the target endpoint's credential
 through the existing host authorization environment variable or `POWERCONTEXT_CLIENT_API_TOKEN` and reconfigure again.
 Old credentials are not rebound automatically. Shared `clients.json` stores connection preferences only; diagnostic JSON omits credentials.
+
+Codex native MCP reads authorization from `POWERCONTEXT_CODEX_AUTHORIZATION` in the host environment. Saving a token
+for Hooks does not make it available to native MCP. On Windows, reconfiguration also updates the user environment
+used after restarting Codex Desktop. On other platforms, set the complete `Bearer <token>` value in the environment
+that launches Codex. If native MCP cannot use the credential, or the Windows environment update fails, the command
+returns `needs_attention`; the configuration files remain saved.
 Invalid credentials and unsafe credential-file permissions also produce `needs_attention`. An absent saved credential
 alone is not a configuration failure; a subsequent `doctor` check determines whether the Server requires authentication.
 
