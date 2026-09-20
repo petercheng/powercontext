@@ -429,15 +429,17 @@ def setup_codex(
 ) -> None:
     """Install the PowerContext Codex plugin and prepare local storage."""
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "codex", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "codex", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_codex_plugin(source=source, ref=ref, server_url=transport.server_url)
         save_setup_transport(transport)
     except SetupError as error:
@@ -493,18 +495,19 @@ def setup_claude_code(
 ) -> None:
     """Install the PowerContext Claude Code plugin."""
 
-    if not configure_only:
-        plan = _claude_setup_plan()
-        _write_claude_setup_plan(plan)
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "claude-code", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
+    plan = _claude_setup_plan()
+    _write_claude_setup_plan(plan)
     try:
         transport = prepare_setup_transport(
             "claude-code", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_claude_code_plugin(
             source=source,
             ref=ref,
@@ -558,15 +561,17 @@ def setup_dsh(
 
     from powercontext.cli.dsh import install_dsh_plugin, run_dsh_diagnostics
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "dsh", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "dsh", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_dsh_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -619,15 +624,17 @@ def setup_openclaw(
 
     from powercontext.cli.openclaw import install_openclaw_plugin
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "openclaw", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "openclaw", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_openclaw_plugin(
             source=source,
             ref=ref,
@@ -682,15 +689,17 @@ def setup_pi(
 
     from powercontext.cli.pi import install_pi_plugin, run_pi_diagnostics
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "pi", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "pi", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_pi_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -743,15 +752,17 @@ def setup_opencode(
 
     from powercontext.cli.opencode import install_opencode_plugin, run_opencode_diagnostics
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "opencode", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "opencode", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_opencode_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -805,15 +816,17 @@ def setup_hermes(
 
     from powercontext.cli.hermes import install_hermes_plugin, run_hermes_diagnostics
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "hermes", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "hermes", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_hermes_plugin(source=source, ref=ref)
         save_setup_transport(transport)
     except SetupError as error:
@@ -916,15 +929,17 @@ def setup_workbuddy(
 
     from powercontext.cli.workbuddy import install_workbuddy_plugin, run_workbuddy_diagnostics
 
+    if configure_only:
+        from powercontext.cli.reconfigure import configure_connection
+
+        configure_connection(
+            "workbuddy", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        return
     try:
         transport = prepare_setup_transport(
             "workbuddy", server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
         )
-        if configure_only:
-            from powercontext.cli.reconfigure import configure_connection
-
-            configure_connection(transport, json_output=json_output)
-            return
         result = install_workbuddy_plugin(source=source, ref=ref, server_url=transport.server_url)
         save_setup_transport(transport)
     except SetupError as error:

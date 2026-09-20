@@ -19,19 +19,57 @@ from __future__ import annotations
 import json
 import os
 import shlex
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import typer
 
 from powercontext.cli.native_transport import _home, _object_at, _read, resolve_host_transport
-from powercontext.cli.transport import SetupTransport, hermes_config_file, save_setup_transport
+from powercontext.cli.transport import SetupTransport, hermes_config_file, prepare_setup_transport, save_setup_transport
 from powercontext.client.transport_policy import client_config_file
 
 
-def configure_connection(settings: SetupTransport, *, json_output: bool = False) -> None:
-    """Apply one explicit endpoint change, retaining unrelated host preferences."""
+@dataclass
+class ConnectionResult:
+    """Describe configuration changes independently of live connection health."""
 
+    host: str
+    client_configuration_file: str
+    status: Literal["applied", "needs_attention", "failed"] = "failed"
+    server_url: str | None = None
+    effective_server_url: str | None = None
+    configuration_files: list[str] = field(default_factory=list)
+    authorization_state: str = "not_checked"
+    reload_required: bool = False
+    connection_status: Literal["not_checked"] = "not_checked"
+    warnings: list[str] = field(default_factory=list)
+    error: dict[str, str] | None = None
+    rollback_status: Literal["not_needed", "restored", "incomplete"] = "not_needed"
+    unrestored_files: list[str] = field(default_factory=list)
+
+
+def configure_connection(
+    host: str,
+    *,
+    server_url: str | None = None,
+    allow_insecure_http: bool | None = None,
+    json_output: bool = False,
+) -> None:
+    """Write connection settings and report applied, needs_attention, or failed."""
+
+    result = _configure_connection(
+        host, server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+    )
+    _write_result(result, json_output=json_output)
+    exit_code = {"applied": 0, "needs_attention": 3, "failed": 1}[result.status]
+    if exit_code:
+        raise typer.Exit(code=exit_code)
+
+
+def _configure_connection(
+    host: str, *, server_url: str | None, allow_insecure_http: bool | None, json_output: bool
+) -> ConnectionResult:
     from powercontext.cli.authorization import (
         configure_stored_authorization,
         credential_path,
@@ -39,81 +77,101 @@ def configure_connection(settings: SetupTransport, *, json_output: bool = False)
     )
     from powercontext.cli.system import SetupError, _write_bytes_atomically
 
+    result = ConnectionResult(host=host, client_configuration_file=str(client_config_file()))
     try:
+        settings = prepare_setup_transport(
+            host, server_url=server_url, allow_insecure_http=allow_insecure_http, json_output=json_output
+        )
+        result.server_url = settings.server_url
         updates = _native_updates(settings)
         destinations = [path for path, _payload in updates]
         destinations.append(client_config_file())
-        if settings.host == "hermes":
+        if host == "hermes":
             destinations.append(hermes_config_file())
-        has_credentials = settings.host not in {"hermes", "openclaw"}
+        has_credentials = host not in {"hermes", "openclaw"}
         if has_credentials:
-            destinations.append(credential_path(settings.host))
+            destinations.append(credential_path(host))
+        result.configuration_files = [str(path) for path in destinations]
         snapshots = {path: path.read_bytes() if path.exists() else None for path in destinations}
-    except (OSError, ValueError) as error:
-        raise SetupError(f"Cannot prepare {settings.host} connection settings: {error}") from error  # noqa: TRY003
+    except (OSError, ValueError, SetupError) as error:
+        result.error = {"stage": "prepare", "message": str(error)}
+        return result
 
     try:
         for path, payload in updates:
             _write_bytes_atomically(path, (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode())
         save_setup_transport(settings)
-        authorization_state = (
-            configure_stored_authorization(
-                settings.host, server_url=settings.server_url, value=setup_authorization_value(settings.host)
-            )
+        result.authorization_state = (
+            configure_stored_authorization(host, server_url=settings.server_url, value=setup_authorization_value(host))
             if has_credentials
             else "host_managed"
         )
     except (OSError, ValueError, SetupError) as error:
-        _restore_configuration(snapshots)
-        raise SetupError(f"Could not update {settings.host} connection settings: {error}") from error  # noqa: TRY003
+        result.error = {"stage": "write", "message": str(error)}
+        result.unrestored_files = _restore_configuration(snapshots)
+        result.rollback_status = "incomplete" if result.unrestored_files else "restored"
+        return result
 
-    _report_connection(settings, destinations, authorization_state, json_output=json_output)
+    _inspect_connection(settings, result)
+    return result
 
 
-def _restore_configuration(snapshots: dict[Path, bytes | None]) -> None:
+def _restore_configuration(snapshots: dict[Path, bytes | None]) -> list[str]:
     from powercontext.cli.system import _write_bytes_atomically
 
+    unrestored = []
     for path, original in reversed(list(snapshots.items())):
         try:
             if original is None:
                 path.unlink(missing_ok=True)
-            else:
+            elif not path.exists() or path.read_bytes() != original:
                 _write_bytes_atomically(path, original)
         except OSError:
-            typer.echo(f"WARNING: could not restore {path}; inspect its connection settings.", err=True)
+            unrestored.append(str(path))
+    return unrestored
 
 
-def _report_connection(
-    settings: SetupTransport, destinations: list[Path], authorization_state: str, *, json_output: bool
-) -> None:
-    warnings: list[str] = []
-    if authorization_state == "url_mismatch":
-        warnings.append("The saved credential belongs to another URL; provide the credential for this endpoint.")
-    try:
-        effective_url, _allowed = resolve_host_transport(settings.host)
-        if effective_url != settings.server_url:
-            warnings.append(f"An existing override still selects {effective_url}; update it and reload the host.")
-    except ValueError as error:
-        effective_url = None
-        warnings.append(str(error))
-    report = {
-        "host": settings.host,
-        "server_url": settings.server_url,
-        "effective_server_url": effective_url,
-        "client_configuration_file": str(client_config_file()),
-        "configuration_files": [str(path) for path in destinations if path.exists()],
-        "authorization_state": authorization_state,
-        "reload_required": True,
-        "warnings": warnings,
+def _inspect_connection(settings: SetupTransport, result: ConnectionResult) -> None:
+    authorization_warnings = {
+        "url_mismatch": "The saved credential belongs to another URL; provide the credential for this endpoint.",
+        "invalid": "The saved credential is invalid; replace it with a valid credential for this endpoint.",
+        "unsafe_permissions": "The saved credential has unsafe permissions; restrict access before reloading the host.",
     }
+    if warning := authorization_warnings.get(result.authorization_state):
+        result.warnings.append(warning)
+    try:
+        result.effective_server_url, _allowed = resolve_host_transport(settings.host)
+        if result.effective_server_url != settings.server_url:
+            result.warnings.append(
+                f"An existing override still selects {result.effective_server_url}; update it and reload the host."
+            )
+    except ValueError as error:
+        result.warnings.append(str(error))
+    result.status = "needs_attention" if result.warnings else "applied"
+    result.reload_required = True
+
+
+def _write_result(result: ConnectionResult, *, json_output: bool) -> None:
     if json_output:
-        typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(asdict(result), indent=2, ensure_ascii=False))
         return
-    typer.echo(f"Configured {settings.host}: {settings.server_url}")
-    typer.echo(f"Client configuration: {client_config_file()}")
-    for warning in warnings:
+    failed = result.status == "failed"
+    typer.echo(f"Connection configuration {result.status.replace('_', ' ')}: {result.host}", err=failed)
+    typer.echo(f"Client configuration: {result.client_configuration_file}", err=failed)
+    if result.error is not None:
+        typer.echo(f"{result.error['stage']}: {result.error['message']}", err=True)
+    if result.rollback_status != "not_needed":
+        typer.echo(f"Rollback: {result.rollback_status}", err=True)
+    for path in result.unrestored_files:
+        typer.echo(f"WARNING: could not restore {path}; inspect its connection settings before reloading.", err=True)
+    for warning in result.warnings:
         typer.echo(f"WARNING: {warning}")
-    typer.echo(f"Reload {settings.host} or start a new session, then run `powercontext doctor {settings.host}`.")
+    if failed:
+        return
+    typer.echo(f"Saved URL: {result.server_url}")
+    typer.echo(f"Effective URL: {result.effective_server_url or 'unknown'}")
+    typer.echo("Connection health: not checked.")
+    typer.echo(f"Reload {result.host} or start a new session, then run `powercontext doctor {result.host}`.")
 
 
 def _native_updates(settings: SetupTransport) -> list[tuple[Path, dict[str, Any]]]:

@@ -147,7 +147,7 @@ def read_stored_authorization(path: Path, *, server_url: str) -> AuthorizationRe
         stored_url = normalize_server_url(payload["server_url"])
         authorization = normalize_authorization(payload["authorization"])
         effective_url = normalize_server_url(server_url)
-    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+    except (OSError, KeyError, TypeError, ValueError):
         return AuthorizationResolution("invalid", None)
     if stored_url != effective_url:
         return AuthorizationResolution("url_mismatch", None)

@@ -44,7 +44,16 @@ def host_configuration(tmp_path, monkeypatch):
         if name.startswith("POWERCONTEXT_"):
             monkeypatch.delenv(name)
     monkeypatch.setenv("POWERCONTEXT_CLIENT_CONFIG_FILE", str(tmp_path / "clients.json"))
-    for name in ("CODEX_HOME", "CLAUDE_CONFIG_DIR", "WORKBUDDY_HOME", "HERMES_HOME", "DSH_HOME", "OPENCLAW_STATE_DIR"):
+    for name in (
+        "CODEX_HOME",
+        "CLAUDE_CONFIG_DIR",
+        "WORKBUDDY_HOME",
+        "HERMES_HOME",
+        "DSH_HOME",
+        "OPENCLAW_STATE_DIR",
+        "PI_CODING_AGENT_DIR",
+        "OPENCODE_CONFIG_DIR",
+    ):
         monkeypatch.setenv(name, str(tmp_path / name))
     _write(
         tmp_path / "CODEX_HOME/plugins/cache/test/powercontext/1.0/.mcp.json",
@@ -108,6 +117,10 @@ def test_configure_only_changes_connection_without_an_installation(host, tmp_pat
 
     assert result.exit_code == 0, result.output
     report = json.loads(result.output)
+    assert report["status"] == "applied"
+    assert report["connection_status"] == "not_checked"
+    assert report["error"] is None
+    assert report["rollback_status"] == "not_needed"
     assert report["server_url"] == NEW_URL
     assert report["effective_server_url"] == NEW_URL
     assert report["reload_required"] is True
@@ -139,8 +152,11 @@ def test_reconfiguration_keeps_url_bound_credentials_until_explicitly_replaced(t
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["authorization_state"] == "url_mismatch"
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["status"] == "needs_attention"
+    assert report["authorization_state"] == "url_mismatch"
+    assert report["warnings"]
     assert path.read_bytes() == original
     assert "old-secret" not in result.output
 
@@ -171,6 +187,12 @@ def test_failed_connection_write_restores_native_configuration(tmp_path, monkeyp
     )
 
     assert result.exit_code == 1
+    report = json.loads(result.stdout)
+    assert report["status"] == "failed"
+    assert report["error"]["stage"] == "write"
+    assert report["rollback_status"] == "restored"
+    assert report["unrestored_files"] == []
+    assert report["reload_required"] is False
     assert native.read_bytes() == original
     assert not client_config_file().exists()
 
@@ -189,8 +211,10 @@ def test_configure_only_reports_an_environment_override(monkeypatch):
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    report = json.loads(result.output)
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["status"] == "needs_attention"
+    assert report["connection_status"] == "not_checked"
     assert report["effective_server_url"] == OLD_URL
     assert report["warnings"]
     assert load_client_settings("pi")["server_url"] == NEW_URL
@@ -228,3 +252,142 @@ def test_codex_reconfiguration_selects_the_active_version(tmp_path):
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["effective_server_url"] == NEW_URL
     assert inactive.read_bytes() == original
+
+
+@pytest.mark.parametrize("host", HOSTS)
+@pytest.mark.parametrize("url", ["invalid", "http://user:secret@example.com"])
+def test_preparation_errors_are_json_for_every_host(host, url):
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", host, "--configure-only", "--server-url", url, "--json"]
+    )
+
+    assert result.exit_code == 1
+    report = json.loads(result.stdout)
+    assert report["host"] == host
+    assert report["status"] == "failed"
+    assert report["error"]["stage"] == "prepare"
+    assert report["error"]["message"]
+    assert report["rollback_status"] == "not_needed"
+    assert report["connection_status"] == "not_checked"
+    assert report["reload_required"] is False
+    assert "secret" not in result.output
+    assert not client_config_file().exists()
+
+
+def test_unavailable_native_configuration_is_reported_as_json(tmp_path):
+    (tmp_path / "WORKBUDDY_HOME/mcp.json").unlink()
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "workbuddy", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 1
+    report = json.loads(result.stdout)
+    assert report["status"] == "failed"
+    assert report["error"]["stage"] == "prepare"
+    assert "Install" in report["error"]["message"]
+    assert not client_config_file().exists()
+
+
+def test_invalid_client_configuration_is_not_overwritten(tmp_path):
+    client_config_file().write_text("invalid-json")
+    native = tmp_path / "WORKBUDDY_HOME/mcp.json"
+    original = native.read_bytes()
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "workbuddy", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 1
+    report = json.loads(result.stdout)
+    assert report["error"]["stage"] == "prepare"
+    assert client_config_file().read_text() == "invalid-json"
+    assert native.read_bytes() == original
+
+
+def test_incomplete_rollback_reports_the_files_needing_repair(tmp_path, monkeypatch):
+    import powercontext.cli.system as system
+
+    native = tmp_path / "WORKBUDDY_HOME/mcp.json"
+    original = native.read_bytes()
+    shared = _write(client_config_file(), {"version": 1, "hosts": {}})
+    original_shared = shared.read_bytes()
+    write = system._write_bytes_atomically
+
+    def fail_shared_and_native_restore(path, content):
+        if path == shared or (path == native and content == original):
+            raise OSError("simulated disk failure")  # noqa: TRY003
+        write(path, content)
+
+    monkeypatch.setattr(system, "_write_bytes_atomically", fail_shared_and_native_restore)
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "workbuddy", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 1
+    report = json.loads(result.stdout)
+    assert report["status"] == "failed"
+    assert report["rollback_status"] == "incomplete"
+    assert report["unrestored_files"] == [str(native)]
+    assert native.read_bytes() != original
+    assert shared.read_bytes() == original_shared
+
+
+@pytest.mark.parametrize("state", ["invalid", "unsafe_permissions"])
+def test_unusable_credentials_require_attention(state):
+    from powercontext.cli.authorization import credential_path, write_stored_authorization
+
+    if state == "unsafe_permissions" and os.name == "nt":
+        pytest.skip("POSIX credential permissions are not checked on Windows")
+    path = credential_path("pi")
+    write_stored_authorization(path, server_url=NEW_URL, value="private-token")
+    if state == "invalid":
+        path.write_text('{"version": 1, "authorization": "private-token"}')
+    else:
+        path.chmod(0o644)
+    original = path.read_bytes()
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "pi", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["status"] == "needs_attention"
+    assert report["authorization_state"] == state
+    assert report["warnings"]
+    assert path.read_bytes() == original
+    assert "private-token" not in result.output
+
+
+def test_unknown_effective_configuration_requires_attention(monkeypatch):
+    monkeypatch.setenv("CLAUDE_PLUGIN_OPTION_SERVER_URL", "invalid")
+
+    result = CliRunner().invoke(
+        create_cli([setup_app]), ["setup", "claude-code", "--configure-only", "--server-url", NEW_URL, "--json"]
+    )
+
+    assert result.exit_code == 3, result.output
+    report = json.loads(result.stdout)
+    assert report["status"] == "needs_attention"
+    assert report["server_url"] == NEW_URL
+    assert report["effective_server_url"] is None
+    assert report["warnings"]
+    assert load_client_settings("claude-code")["server_url"] == NEW_URL
+
+
+@pytest.mark.parametrize("url", [NEW_URL, "invalid"])
+def test_text_output_distinguishes_attention_from_failure(monkeypatch, url):
+    monkeypatch.setenv("POWERCONTEXT_PI_BASE_URL", OLD_URL)
+
+    result = CliRunner().invoke(create_cli([setup_app]), ["setup", "pi", "--configure-only", "--server-url", url])
+
+    if url == NEW_URL:
+        assert result.exit_code == 3
+        assert "Connection configuration needs attention" in result.stdout
+        assert "Connection health: not checked" in result.stdout
+        assert OLD_URL in result.stdout
+    else:
+        assert result.exit_code == 1
+        assert "Connection configuration failed" in result.stderr
+        assert "prepare:" in result.stderr

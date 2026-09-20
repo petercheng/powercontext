@@ -170,9 +170,31 @@ Replace `codex` with `claude-code`, `dsh`, `openclaw`, `pi`, `opencode`, `hermes
 includes configuration paths, the effective URL, and a reload instruction. If an environment variable overrides the
 saved URL, update that variable before reloading MCP or restarting the host. OpenClaw requires a gateway restart.
 
+The option writes configuration files and handles connection URLs, transport settings, and explicitly supplied
+credentials. It does not change the Server listener or probe connection health. Results use these statuses:
+
+| `status` | Exit code | Meaning and next step |
+| --- | --- | --- |
+| `applied` | `0` | Settings were applied without known configuration blockers; follow `reload_required`, then run `doctor` |
+| `needs_attention` | `3` | Settings were written, but an override, unknown effective URL, or credential problem needs attention; address `warnings` first |
+| `failed` | `1` | Preparation or writing failed; inspect `error` and the rollback result |
+
+After argument parsing succeeds, `--json` emits one JSON object on stdout for all three outcomes. CLI usage errors
+retain exit code `2` and usage text on stderr, outside this JSON contract. `connection_status` is always `not_checked`;
+exit code `0` does not establish reachability or successful authentication. `effective_server_url` reflects the current
+environment and configuration, not the connection held by a running host; it is `null` when resolution fails.
+
+Failure results include an `error` with `stage` (`prepare` or `write`) and `message`. A failed write attempts to restore
+the original files: `rollback_status` is `restored` or `incomplete`, and `unrestored_files` lists paths still needing
+repair. It is `not_needed` if writing never began. Repair incomplete rollback before reloading the host. Each file uses
+atomic replacement; recovery across files is best effort within the process, with no all-or-nothing guarantee if the
+process is forcibly terminated.
+
 An existing credential bound to the old URL is reported as `url_mismatch`. Supply the target endpoint's credential
 through the existing host authorization environment variable or `POWERCONTEXT_CLIENT_API_TOKEN` and reconfigure again.
 Old credentials are not rebound automatically. Shared `clients.json` stores connection preferences only; diagnostic JSON omits credentials.
+Invalid credentials and unsafe credential-file permissions also produce `needs_attention`. An absent saved credential
+alone is not a configuration failure; a subsequent `doctor` check determines whether the Server requires authentication.
 
 When MCP is disconnected, an agent should inspect local CLI output or files, report the configuration path, selected
 URL, and concrete error, then make authorized connection changes. Recovery does not depend on the disconnected MCP

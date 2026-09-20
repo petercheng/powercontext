@@ -194,8 +194,28 @@ powercontext doctor codex --json
 `--configure-only` 更新连接配置，不重新安装插件，不重启服务或宿主。输出包含配置文件位置、有效地址和重载提示。
 若环境变量覆盖了新配置，先调整该变量，再重载 MCP、重启宿主或开始新会话。OpenClaw 需重启 gateway。
 
+该选项会实际写入配置文件，只处理连接地址、传输设置和显式提供的凭据。命令不修改服务端监听端口，也不探测连接健康。
+结果状态与退出码如下：
+
+| `status` | 退出码 | 含义与后续操作 |
+| --- | --- | --- |
+| `applied` | `0` | 配置已应用，无已知配置阻碍；按 `reload_required` 重载宿主后运行 `doctor` |
+| `needs_attention` | `3` | 配置已写入，但存在地址覆盖、无法确定有效地址或凭据异常；先处理 `warnings` |
+| `failed` | `1` | 准备或写入失败；查看 `error` 和回滚结果 |
+
+参数解析成功后，`--json` 在以上三种结果下都向 stdout 输出一个 JSON 对象。CLI 参数用法错误沿用退出码 `2`
+及 stderr 用法提示，不属于该 JSON 结果。`connection_status` 始终为 `not_checked`，退出码 `0` 不代表服务可达或认证成功。
+`effective_server_url` 是当前环境与配置解析出的地址，不是运行中宿主的连接状态；无法确定时为 `null`。
+
+失败结果的 `error` 包含 `stage`（`prepare` 或 `write`）和 `message`。写入失败会尝试恢复原文件，
+`rollback_status` 为 `restored` 或 `incomplete`；`unrestored_files` 列出仍需检查修复的路径。未开始写入时为 `not_needed`。
+回滚不完整时先修复文件，再重载宿主。单文件写入使用原子替换，多文件更新仅提供进程内尽力回滚；进程被强制终止时
+不能保证所有文件一起回退。
+
 凭据仍绑定原服务 URL 时，输出 `url_mismatch`；通过原有的宿主认证环境变量或 `POWERCONTEXT_CLIENT_API_TOKEN`
 提供目标服务的凭据后重新配置。不会自动将旧凭据绑定到新地址。共享 `clients.json` 只保存连接偏好，诊断 JSON 不展示凭据。
+损坏凭据和不安全的凭据文件权限也会产生 `needs_attention`。没有保存凭据本身不视为配置失败，目标服务是否要求认证由后续
+`doctor` 检查。
 
 Agent 在 MCP 无法连接时应使用本地 CLI 或文件检查，先报告配置路径、当前 URL 和具体错误；在已获授权的范围内
 修订客户端连接。不要依赖已断开的 MCP 进行恢复，也不要通过试探端口猜测服务位置。
